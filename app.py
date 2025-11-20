@@ -10,6 +10,10 @@ CORS(app, origins=['http://localhost:5173', 'https://stevegraf.com'])
 def home():
     return render_template('index.html')
 
+@app.route('/odds/')
+def odds_template():
+    return render_template('odds.html')
+
 # delete response_json logic when done with dev
 global response_json
 response_json = ''
