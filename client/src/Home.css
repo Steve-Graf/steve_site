@@ -1,0 +1,12 @@
+.container{
+    background-color: #F2CC8F;
+}
+
+.button{
+    border-radius: 5px;
+    padding: 10px;
+    box-sizing: border-box;
+    cursor: pointer;
+    background-color: #81B29A;
+    box-shadow: 2px 2px 5px #0000008a;
+}

@@ -1,0 +1,24 @@
+@font-face {
+    font-family: CompactaBlackRegular;
+    src: url("assets/fonts/CompactaBlackRegular.otf") format("opentype");
+}
+
+@font-face {
+    font-family: TF2;
+    src: url("assets/fonts/TF2.ttf") format("opentype");
+}
+
+@font-face {
+    font-family: TF2Build;
+    src: url("assets/fonts/TF2Build.ttf") format("opentype");
+}
+
+@font-face {
+    font-family: TF2Secondary;
+    src: url("assets/fonts/TF2secondary.ttf") format("opentype");
+}
+
+@font-face {
+    font-family: BorisBlackBoxx;
+    src: url("assets/fonts/BorisBlackBloxx.ttf") format("opentype");
+}
