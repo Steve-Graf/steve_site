@@ -1,19 +1,148 @@
+#root{
+    color: #2e1f01;
+}
+.dave-title{
+    padding: 20px 0;
+    margin: 0 auto;
+    background-color: #619e51;
+    outline: 10px solid #ffffff;
+    letter-spacing: 1px;
+    font-family: 'NFL-browns';
+    color: #fe3c00;
+    font-size: 84px;
+    -webkit-text-stroke-width: 2px;
+    -webkit-text-stroke-color: #ffffff;
+}
+
 .odds-wrapper{
     display: flex;
-    align-items: flex-start;
     justify-content: center;
+    margin: 24px auto;
+    flex-direction: column;
+}
+
+.odds-headers-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.column-header{
+    width: 100px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    font-weight: bold;
+    user-select: none;
+    background: #fff;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom: 1px solid;
+    box-sizing: border-box;
+}
+
+.odds-items-wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
 }
 
 .teams-wrapper{
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-around;
+}
+
+.teams-column{
+    align-self: flex-end;
+    height: 100px;
+    width: 100px;
+    font-weight: bold;
+    font-size: 36px;
+    user-select: none;
+    background: #fff;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    outline: 1px solid;
+}
+
+.teams-name{
+    text-shadow:
+        2px 2px 0 var(--stroke-color),
+        -2px 2px 0 var(--stroke-color),
+        2px -2px 0 var(--stroke-color),
+        -2px -2px 0 var(--stroke-color);
+    letter-spacing: 2px;
+}
+
+.teams-at{
+    position: absolute;
+    font-size: 26px;
+    line-height: 26px;
+    color: #fff;
+    text-shadow:
+        1px 1px 0 #000,
+        -1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000;
 }
 
 .odds-column{
+    width: 100px;
+    height: 130px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: space-around;
+    background: white;
+    position: relative;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    outline: 1px solid;
+}
+
+.odds-column:last-of-type{
+    border-bottom-right-radius: 10px;
+}
+
+.column-value{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.column-separator{
+    background: black;
+    height: 1px;
+    width: 90%;
+}
+
+.time-separator{
+    font-size: 20px;
+    font-weight: bold;
+    margin: 30px auto 0 auto;
+    text-align: center;
+}
+
+@media (max-width: 565px) {
+    #root {
+        width: 100%;
+        border-width: 5px;
+    }
+    .dave-title{
+        outline-width: 5px;
+        font-size: 64px;
+    }
+    .odds-column{
+        width: auto;
+    }
+    .column-header{
+        width: auto;
+        padding: 0 15px;
+    }
 }

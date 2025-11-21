@@ -22,3 +22,13 @@
     font-family: BorisBlackBoxx;
     src: url("assets/fonts/BorisBlackBloxx.ttf") format("opentype");
 }
+
+@font-face {
+    font-family: NFLRegular;
+    src: url("assets/fonts/NFLRegular.ttf") format("opentype");
+}
+
+@font-face {
+    font-family: NFL-Browns;
+    src: url("assets/fonts/nfl-browns-2015.ttf") format("opentype");
+}

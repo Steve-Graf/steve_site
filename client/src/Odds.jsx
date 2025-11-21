@@ -1,21 +1,27 @@
 import React, {useState, useEffect } from 'react';
 import './Odds.css';
 import {nflTeams} from "./data/nflTeams"
+import TimeSeparator from './TimeSeparator';
+import GameRow from './GameRow.jsx'
 
 const API_URL = 'http://localhost:5000/api/odds/'
 
-function formatSignedNumber(number){
-    if(number > 0){
-        return '+'+number;
-    }else{
-        return number;
-    }
+function getNextTuesday() {
+    const now = new Date();
+    const day = now.getDay();
+    
+    const daysUntilTuesday = (9 - day) % 7 || 7;
+    const nextTuesday = new Date(now);
+    nextTuesday.setDate(now.getDate() + daysUntilTuesday);
+    nextTuesday.setHours(0, 0, 0, 0);
+    return nextTuesday;
 }
 
 function Odds() {
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedColumnValue, setSelectedColumnValue] = useState({});
     
     // useEffect Hook runs after the component renders
     useEffect(() => {
@@ -48,6 +54,9 @@ function Odds() {
 
     return (
         <div>
+            <h1 className="dave-title">
+                Dave's Odds
+            </h1>
             {loading && <p>Loading...</p>}
             {error && <p>Error: {error}</p>}
 
@@ -55,46 +64,71 @@ function Odds() {
                 <p>No games found.</p>
             )}
             {!loading && !error && games.map((game, index) => {
-                const bookmaker = game.bookmakers.find(bookmaker => bookmaker.key == 'draftkings');
-                const spreadMarket = bookmaker.markets.find(market => market.key == 'spreads');
-                const spreadAway = spreadMarket.outcomes.find(outcome => outcome.name == game.away_team);
-                const spreadHome = spreadMarket.outcomes.find(outcome => outcome.name == game.home_team);
+                // only get games up to the upcoming monday?
+                const gameTimeLocal = new Date(game.commence_time);
+                const nextTuesday = getNextTuesday();
+                if(gameTimeLocal > nextTuesday){
+                    return;
+                }
 
-                const mlMarket = bookmaker.markets.find(market => market.key == 'h2h')
-                const mlAway = mlMarket.outcomes.find(outcome => outcome.name == game.away_team);
-                const mlHome = mlMarket.outcomes.find(outcome => outcome.name == game.home_team);
-
-                const ouMarket = bookmaker.markets.find(market => market.key == 'totals')
-                const ouOver = ouMarket.outcomes.find(outcome => outcome.name == 'Over');
-                const ouUnder = ouMarket.outcomes.find(outcome => outcome.name == 'Under');
-
+                let showTimeSeparator = false;
+                if(index > 0){
+                    const previousGame = games[index - 1];
+                    if(previousGame.commence_time != game.commence_time){
+                        showTimeSeparator = true;
+                    }
+                }else{
+                    showTimeSeparator = true;
+                }
+                
                 return (
-                    <div key={index} className="odds-wrapper">
-                        <div className="teams-wrapper">
-                            <div>{nflTeams[game.away_team].abbrv}</div>
-                            <div>@</div>
-                            <div>{nflTeams[game.home_team].abbrv}</div>
-                        </div>
-                        
-                        <div className="spread-wrapper odds-column">
-                            <div className="column-title">Spread</div>
-                            <div className="column-value">{formatSignedNumber(spreadAway.point)}</div>
-                            <div className="column-value">{formatSignedNumber(spreadHome.point)}</div>
-                        </div>
-
-                        <div className="ml-wrapper odds-column">
-                            <div className="column-title">Moneyline</div>
-                            <div className="column-value">{formatSignedNumber(mlAway.price)}</div>
-                            <div className="column-value">{formatSignedNumber(mlHome.price)}</div>
-                        </div>
-
-                        <div className="ou-wrapper odds-column">
-                            <div className="column-title">O/U</div>
-                            <div className="column-value">{ouOver.point}</div>
-                        </div>
-                        {/* <p>{game.away_team}: {formatSignedNumber(spreadAway.price)} {formatSignedNumber(spreadAway.point)} {formatSignedNumber(mlAway.price)}</p>
-                        <p>{game.home_team}: {formatSignedNumber(spreadHome.price)} {formatSignedNumber(spreadHome.point)} {formatSignedNumber(mlHome.price)}</p> */}
+                    <div key={index}>
+                        {showTimeSeparator && <TimeSeparator game={game} />}
+                        <GameRow key={index} game={game} />
                     </div>
+
+                    // <div key={index} className="odds-wrapper">
+                    //     {showTimeSeparator && <TimeSeparator game={game} />}
+                    //     <div className="odds-headers-wrapper">
+                    //         <div className="odds-header" style={{visibility:'hidden'}}></div>
+                    //         <div className="odds-header">Spread</div>
+                    //         <div className="odds-header">Moneyline</div>
+                    //         <div className="odds-header">O/U</div>
+                    //     </div>
+                    //     <div className="odds-items-wrapper">
+                    //         <div className="teams-wrapper teams-column">
+                    //             {/* away team abbreviation*/}
+                    //             <div className="teams-name" style={{color:nflTeams[game.away_team].colors.away,"--stroke-color":nflTeams[game.away_team].colors.home}}>
+                    //                 {nflTeams[game.away_team].abbrv}
+                    //             </div>
+
+                    //             <div className="teams-at">@</div>
+
+                    //             {/* home team abbreviation*/}
+                    //             <div className="teams-name" style={{color:nflTeams[game.home_team].colors.home, "--stroke-color":nflTeams[game.home_team].colors.accent,zIndex:1}}>
+                    //                 {nflTeams[game.home_team].abbrv}
+                    //             </div>
+                    //         </div>
+                            
+                    //         <div className="spread-wrapper odds-column">
+                    //             <div className="column-value">{formatSignedNumber(spreadAway.point)}</div>
+                    //             <div className="column-separator"></div>
+                    //             <div className="column-value">{formatSignedNumber(spreadHome.point)}</div>
+                    //         </div>
+
+                    //         <div className="ml-wrapper odds-column">
+                    //             <div className="column-value">{formatSignedNumber(mlAway.price)}</div>
+                    //             <div className="column-separator"></div>
+                    //             <div className="column-value">{formatSignedNumber(mlHome.price)}</div>
+                    //         </div>
+
+                    //         <div className="ou-wrapper odds-column">
+                    //             <div className="column-value">O {ouOver.point}</div>
+                    //             <div className="column-separator"></div>
+                    //             <div className="column-value">U {ouOver.point}</div>
+                    //         </div>
+                    //     </div>
+                    // </div>
                 );
             })}
         </div>
