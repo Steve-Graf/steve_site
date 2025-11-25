@@ -2,39 +2,47 @@ import './Odds.css';
 import TeamColumn from './TeamColumn.jsx';
 import OddsColumn from './OddsColumn.jsx';
 
-export default function GameRow({game}) {
-    const gameTimeLocal = new Date(game.commence_time);
+function formatSignedNumber(number, reciprocal){
+    if(reciprocal){
+        number *= -1;
+    }
+    if(number > 0){
+        return '+'+number;
+    }else{
+        return number;
+    }
+}
 
-    const bookmaker = game.bookmakers.find(bookmaker => bookmaker.key == 'draftkings');
-    const spreadMarket = bookmaker.markets.find(market => market.key == 'spreads');
-    const spreadAway = spreadMarket.outcomes.find(outcome => outcome.name == game.away_team);
-    const spreadHome = spreadMarket.outcomes.find(outcome => outcome.name == game.home_team);
-
-    const mlMarket = bookmaker.markets.find(market => market.key == 'h2h')
-    const mlAway = mlMarket.outcomes.find(outcome => outcome.name == game.away_team);
-    const mlHome = mlMarket.outcomes.find(outcome => outcome.name == game.home_team);
-
-    const ouMarket = bookmaker.markets.find(market => market.key == 'totals')
-    const ouOver = ouMarket.outcomes.find(outcome => outcome.name == 'Over');
-    const ouUnder = ouMarket.outcomes.find(outcome => outcome.name == 'Under');
-
+export default function GameRow({game, selectedTeam}) {
+    const awaySpread = formatSignedNumber(game.gameSpread, game.gameSpreadTeam != game.awayTeam);
+    const homeSpread = formatSignedNumber(game.gameSpread, game.gameSpreadTeam != game.homeTeam);
+    const currentTime = new Date();
+    const gameTimeLocal = new Date(game.gameTime);
     return (
         <div className="odds-items-wrapper">
             <TeamColumn game={game} />
 
             <OddsColumn
+                gameId={game.gameId}
+                awayTeam={game.awayTeam}
+                homeTeam={game.homeTeam}
                 label="Spread"
-                values={[spreadAway.point, spreadHome.point]}
+                values={[awaySpread, homeSpread]}
+                canClick={currentTime < gameTimeLocal}
+                selectedTeam={selectedTeam}
+                gameDate={game.gameTime}
             />
 
-            <OddsColumn
+            {/* <OddsColumn
                 label="Moneyline"
                 values={[mlAway.price, mlHome.price]}
-            />
+                canClick={false}
+            /> */}
 
             <OddsColumn
                 label="O/U"
-                values={[`O ${ouOver.point}`, `U ${ouUnder.point}`]}
+                values={[`O ${game.ouPoints}`, `U ${game.ouPoints}`]}
+                canClick={false}
             />
         </div>
     );

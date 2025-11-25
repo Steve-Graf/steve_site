@@ -116,8 +116,14 @@
     user-select: none;
 }
 
+.column-value-selected{
+    background: #2e1f01;
+    color: #fff;
+    outline: 1px solid #2e1f01;
+}
+
 .column-separator{
-    background: black;
+    background: #2e1f01;
     height: 1px;
     width: 90%;
 }
@@ -126,10 +132,23 @@
     font-size: 20px;
     font-weight: bold;
     margin: 30px auto 0 auto;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.time-separator-line{
+    height: 10px;
+    flex-grow: 1;
+    background-color: yellow;
+}
+.time-separator-text{
+    margin: 0 10px;
 }
 
 @media (max-width: 565px) {
+    body{
+        margin-top: 0 !important;
+    }
     #root {
         width: 100%;
         border-width: 5px;
