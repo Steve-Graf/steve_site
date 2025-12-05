@@ -111,7 +111,6 @@ def update_game_score(game):
         dt = dt.replace(tzinfo=timezone.utc)
     yyyymmdd = dt.astimezone().strftime("%Y%m%d")
     url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates={yyyymmdd}"
-    print(url)
 
     try:
         response = requests.get(url)
