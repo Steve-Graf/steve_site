@@ -1,0 +1,146 @@
+export const nflWeeks = [
+    {
+        "label": "Week 1",
+        "alternateLabel": "Week 1",
+        "detail": "Sep 4-9",
+        "value": "1",
+        "startDate": "2025-09-04T07:00Z",
+        "endDate": "2025-09-10T06:59Z"
+    },
+    {
+        "label": "Week 2",
+        "alternateLabel": "Week 2",
+        "detail": "Sep 10-16",
+        "value": "2",
+        "startDate": "2025-09-10T07:00Z",
+        "endDate": "2025-09-17T06:59Z"
+    },
+    {
+        "label": "Week 3",
+        "alternateLabel": "Week 3",
+        "detail": "Sep 17-23",
+        "value": "3",
+        "startDate": "2025-09-17T07:00Z",
+        "endDate": "2025-09-24T06:59Z"
+    },
+    {
+        "label": "Week 4",
+        "alternateLabel": "Week 4",
+        "detail": "Sep 24-30",
+        "value": "4",
+        "startDate": "2025-09-24T07:00Z",
+        "endDate": "2025-10-01T06:59Z"
+    },
+    {
+        "label": "Week 5",
+        "alternateLabel": "Week 5",
+        "detail": "Oct 1-7",
+        "value": "5",
+        "startDate": "2025-10-01T07:00Z",
+        "endDate": "2025-10-08T06:59Z"
+    },
+    {
+        "label": "Week 6",
+        "alternateLabel": "Week 6",
+        "detail": "Oct 8-14",
+        "value": "6",
+        "startDate": "2025-10-08T07:00Z",
+        "endDate": "2025-10-15T06:59Z"
+    },
+    {
+        "label": "Week 7",
+        "alternateLabel": "Week 7",
+        "detail": "Oct 15-21",
+        "value": "7",
+        "startDate": "2025-10-15T07:00Z",
+        "endDate": "2025-10-22T06:59Z"
+    },
+    {
+        "label": "Week 8",
+        "alternateLabel": "Week 8",
+        "detail": "Oct 22-28",
+        "value": "8",
+        "startDate": "2025-10-22T07:00Z",
+        "endDate": "2025-10-29T06:59Z"
+    },
+    {
+        "label": "Week 9",
+        "alternateLabel": "Week 9",
+        "detail": "Oct 29-Nov 4",
+        "value": "9",
+        "startDate": "2025-10-29T07:00Z",
+        "endDate": "2025-11-05T07:59Z"
+    },
+    {
+        "label": "Week 10",
+        "alternateLabel": "Week 10",
+        "detail": "Nov 5-11",
+        "value": "10",
+        "startDate": "2025-11-05T08:00Z",
+        "endDate": "2025-11-12T07:59Z"
+    },
+    {
+        "label": "Week 11",
+        "alternateLabel": "Week 11",
+        "detail": "Nov 12-18",
+        "value": "11",
+        "startDate": "2025-11-12T08:00Z",
+        "endDate": "2025-11-19T07:59Z"
+    },
+    {
+        "label": "Week 12",
+        "alternateLabel": "Week 12",
+        "detail": "Nov 19-25",
+        "value": "12",
+        "startDate": "2025-11-19T08:00Z",
+        "endDate": "2025-11-26T07:59Z"
+    },
+    {
+        "label": "Week 13",
+        "alternateLabel": "Week 13",
+        "detail": "Nov 26-Dec 2",
+        "value": "13",
+        "startDate": "2025-11-26T08:00Z",
+        "endDate": "2025-12-03T07:59Z"
+    },
+    {
+        "label": "Week 14",
+        "alternateLabel": "Week 14",
+        "detail": "Dec 3-9",
+        "value": "14",
+        "startDate": "2025-12-03T08:00Z",
+        "endDate": "2025-12-10T07:59Z"
+    },
+    {
+        "label": "Week 15",
+        "alternateLabel": "Week 15",
+        "detail": "Dec 10-16",
+        "value": "15",
+        "startDate": "2025-12-10T08:00Z",
+        "endDate": "2025-12-17T07:59Z"
+    },
+    {
+        "label": "Week 16",
+        "alternateLabel": "Week 16",
+        "detail": "Dec 17-23",
+        "value": "16",
+        "startDate": "2025-12-17T08:00Z",
+        "endDate": "2025-12-24T07:59Z"
+    },
+    {
+        "label": "Week 17",
+        "alternateLabel": "Week 17",
+        "detail": "Dec 24-30",
+        "value": "17",
+        "startDate": "2025-12-24T08:00Z",
+        "endDate": "2025-12-31T07:59Z"
+    },
+    {
+        "label": "Week 18",
+        "alternateLabel": "Week 18",
+        "detail": "Dec 31-Jan 7",
+        "value": "18",
+        "startDate": "2025-12-31T08:00Z",
+        "endDate": "2026-01-08T07:59Z"
+    }
+]

@@ -2,19 +2,10 @@ import React, {useState, useEffect } from 'react';
 import './Odds.css';
 import TimeSeparator from './TimeSeparator';
 import GameRow from './GameRow.jsx';
+import Popup from './Popup.jsx';
+import MenuButton from './MenuButton.jsx';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-function getNextTuesday() {
-    const now = new Date();
-    const day = now.getDay();
-    
-    const daysUntilTuesday = (9 - day) % 7 || 7;
-    const nextTuesday = new Date(now);
-    nextTuesday.setDate(now.getDate() + daysUntilTuesday);
-    nextTuesday.setHours(0, 0, 0, 0);
-    return nextTuesday;
-}
 
 function generateRandomFourCharString() {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789';
@@ -33,6 +24,14 @@ function getLocalStorageUserCode(){
         localStorage.setItem('userCode', userCode);
     }
     return userCode;
+}
+
+function getShowPopup(){
+    let showPopup = localStorage.getItem('showPopup', true);
+    if(showPopup == null){
+        return false;
+    }
+    return showPopup;
 }
 
 function getSelectedTeam(currentGame){
@@ -56,9 +55,29 @@ function calculateShowTimeSeparator(previousGame, currentGame, minutesMargin){
     return false;
 }
 
+async function getGameScores(gamesArr){
+    const postData = {
+        "games":gamesArr
+    };
+    console.log(API_URL+'scores');
+    const response = await fetch(API_URL+'scores', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postData)
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log(data['updatedGames']);
+}
+
 function Odds() {
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showPopup, setShowPopup] = useState(true);
     const [error, setError] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
     const [userError, setUserError] = useState(null);
@@ -82,6 +101,7 @@ function Odds() {
                 console.log(data);
                 const gamesArray = Array.isArray(data) ? data : [data];
                 setGames(gamesArray);
+                getGameScores(gamesArray);
             } catch (e) {
                 console.error('Failed to fetch game odds:', e);
                 setError(e.message);
@@ -114,27 +134,27 @@ function Odds() {
             }
         };
         fetchPicksByCode();
+
+        setShowPopup(getShowPopup());
     }, []);
 
     return (
         <div>
+            <MenuButton title={'Profile'}/>
             <h1 className="dave-title">
                 Dave's Odds
             </h1>
-            {(loading || userLoading) && <p>Loading...</p>}
-            {(error || userError) && <p>Error: {error}</p>}
+            {showPopup && 
+                <Popup title={'New here?'} description={'Welcome to a hobby project I set up for my dad, Dave.<br><br>To save your picks, click on the spread and O/U columns.<br><br>I\'ve assigned each new user a unique code. You can view this code in the "Profile" section. The "Profile" section is also where you can update your username for the leaderboards.<br><br>PLEASE NOTE: This code is unique and should be treated as your password. You can use this code to login to other devices.'}/>
+            }
+            
+            {(loading || userLoading) && <p className="status-p">Loading...</p>}
+            {(error || userError) && <p className="status-p">Error: {error}</p>}
 
             {!loading && !error && games.length === 0 && (
-                <p>No games found.</p>
+                <p className="status-p">No games found.</p>
             )}
             {!loading && !error && !userLoading && !userError && games.map((game, index) => {
-                // only get games up to the upcoming monday?
-                const gameTimeLocal = new Date(game.commence_time);
-                const nextTuesday = getNextTuesday();
-                if(gameTimeLocal > nextTuesday){
-                    return;
-                }
-
                 let showTimeSeparator = false;
                 let minutesMargin = 10
                 if(index > 0){

@@ -14,6 +14,11 @@
     -webkit-text-stroke-color: #ffffff;
 }
 
+.status-p{
+    padding: 30px;
+    font-size: 20px;
+}
+
 .odds-wrapper{
     display: flex;
     justify-content: center;
@@ -144,6 +149,53 @@
 .time-separator-text{
     margin: 0 10px;
 }
+.user-popup{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+    background: white;
+    border-radius: 15px;
+    border: 1px solid black;
+    user-select: none;
+    padding: 8px 10px;
+    z-index: 2;
+}
+.user-popup-icon{
+    width: 20px;
+    height: 20px;
+    margin-left: 5px;
+}
+.popup-background{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 3;
+    background-color: #0000002d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.popup-content{
+    background: white;
+    width: 300px;
+    padding: 20px;
+    margin-top: -200px;
+    border-radius: 10px;
+    font-family: 'Roboto-Regular';
+}
+.popup-title{
+    text-align: center;
+    font-size: 22px;
+    padding-bottom: 10px;
+    font-family: 'Roboto-Bold';
+}
+
 
 @media (max-width: 565px) {
     body{

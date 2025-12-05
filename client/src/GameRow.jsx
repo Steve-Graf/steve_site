@@ -1,6 +1,7 @@
 import './Odds.css';
 import TeamColumn from './TeamColumn.jsx';
 import OddsColumn from './OddsColumn.jsx';
+import ScoreColumn from './ScoreColumn.jsx';
 
 function formatSignedNumber(number, reciprocal){
     if(reciprocal){
@@ -21,6 +22,11 @@ export default function GameRow({game, selectedTeam}) {
     return (
         <div className="odds-items-wrapper">
             <TeamColumn game={game} />
+
+            <ScoreColumn
+                awayScore={game.awayScore}
+                homeScore={game.homeScore}
+            />
 
             <OddsColumn
                 gameId={game.gameId}
