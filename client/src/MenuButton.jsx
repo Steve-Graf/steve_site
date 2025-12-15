@@ -4,21 +4,25 @@ import React, {useState} from 'react';
 import profileIcon from './assets/icons/profile.svg';
 
 export default function MenuButton({title}) {
-    const [showPopup, setShowPopup] = useState(true);
+    const [showPopup, setShowPopup] = useState(false);
 
     function handleClick(){
-        // console.log(title);
-        alert('Coming soon!');
+        setShowPopup(true);
+    }
+
+    function handlePopupBackgroundClick(){
+        setShowPopup(false);
     }
 
     return (
         <>
-            {/* {showPopup && 
-                <ProfilePopup />
-            } */}
+            {showPopup && 
+                <ProfilePopup 
+                    backgroundClick={handlePopupBackgroundClick}
+                />
+            }
             <div className="user-popup" onClick={() => handleClick()}>
                 <div>{title}</div>
-                {/* <img className="user-popup-icon" src="/images/profile.svg"/> */}
                 <img className="user-popup-icon" src={profileIcon}/>
             </div>
         </>

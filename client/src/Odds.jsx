@@ -4,6 +4,7 @@ import TimeSeparator from './TimeSeparator';
 import GameRow from './GameRow.jsx';
 import Popup from './Popup.jsx';
 import MenuButton from './MenuButton.jsx';
+import AppContext from './AppContext.jsx';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -24,14 +25,6 @@ function getLocalStorageUserCode(){
         localStorage.setItem('userCode', userCode);
     }
     return userCode;
-}
-
-function getShowPopup(){
-    let showPopup = localStorage.getItem('showPopup', true);
-    if(showPopup == null){
-        return false;
-    }
-    return showPopup;
 }
 
 function getSelectedTeam(currentGame){
@@ -82,6 +75,18 @@ function Odds() {
     const [userLoading, setUserLoading] = useState(true);
     const [userError, setUserError] = useState(null);
     const [userData, setUserData] = useState([]);
+
+    function getShowPopup(){
+        let showPopup = localStorage.getItem('showPopup', true);
+        if(showPopup == null || showPopup === 'true' || showPopup == true){
+            localStorage.setItem('showPopup', false);
+        }
+        setShowPopup(showPopup === 'true');
+    }
+
+    function handlePopupBackgroundClick(){
+        setShowPopup(false);
+    }
     
     // useEffect Hook runs after the component renders
     useEffect(() => {
@@ -135,17 +140,19 @@ function Odds() {
         };
         fetchPicksByCode();
 
-        setShowPopup(getShowPopup());
+        getShowPopup();
     }, []);
 
     return (
         <div>
-            <MenuButton title={'Profile'}/>
+            <AppContext.Provider value={{ userData }}>
+                <MenuButton title={'Profile'}/>
+            </AppContext.Provider>
             <h1 className="dave-title">
                 Dave's Odds
             </h1>
             {showPopup && 
-                <Popup title={'New here?'} description={'Welcome to a hobby project I set up for my dad, Dave.<br><br>To save your picks, click on the spread and O/U columns.<br><br>I\'ve assigned each new user a unique code. You can view this code in the "Profile" section. The "Profile" section is also where you can update your username for the leaderboards.<br><br>PLEASE NOTE: This code is unique and should be treated as your password. You can use this code to login to other devices.'}/>
+                <Popup title={'New here?'} description={'Welcome to a hobby project I set up for my dad, Dave.<br><br>To save your picks, click on the spread and O/U columns.<br><br>I\'ve assigned each new user a unique code. You can view this code in the "Profile" section. The "Profile" section is also where you can update your username for the leaderboards.<br><br>PLEASE NOTE: This code is unique and should be treated as your password. You can use this code to login to other devices.'} backgroundClick={handlePopupBackgroundClick}/>
             }
             
             {(loading || userLoading) && <p className="status-p">Loading...</p>}

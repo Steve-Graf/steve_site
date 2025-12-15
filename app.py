@@ -248,15 +248,21 @@ def update_username():
     player_code = data["playerCode"]
     username = data["username"]
 
-    # update OR insert — doesn't matter; $set handles both
     result = users.update_one(
         {"playerCode": player_code},
-        {"$set": {f"username": username}}
+        {"$set": {f"name": username}},
+        upsert=False
     )
+
+    if result.matched_count == 0:
+        return jsonify({
+            "status": "failed",
+            "action": "no_user_found"
+        })
 
     return jsonify({
         "status": "success",
-        "action": "updated" if result.matched_count else "created"
+        "action": "updated"
     })
     
 def get_user(player_code):
