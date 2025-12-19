@@ -32,66 +32,6 @@ def home():
 def odds_template():
     return render_template('odds.html')
 
-global odds_json
-odds_json = ''
-global last_odds_ping_unix
-last_odds_ping_unix = None
-def call_odds_api(sport):
-    print(f"Pinging odds API for {sport}...")
-    api_key = keys.odds_api
-    sport_key = ''
-    if(sport == 'NFL'):
-        sport_key = 'americanfootball_nfl'
-    else:
-        return jsonify({"error": f"Unsupported sport"})
-    api_url = f'https://api.the-odds-api.com/v4/sports/{sport_key}/odds/'
-    params = {"apiKey":api_key, "regions":"us", "markets":"h2h,spreads,totals", "oddsFormat":"american", "bookmakers":"draftkings"}
-    try:
-        response = requests.get(api_url, params=params)
-        response.raise_for_status()
-        if(response.status_code == 200):
-            global last_odds_ping_unix
-            last_odds_ping_unix = time.time()
-            with open("last_updated.txt", "w") as f:
-                f.write(str(int(time.time())))
-            # update games that are not active or complete
-            odds_json = response.json()
-            for game in odds_json:
-                game_time = datetime.fromisoformat(game['commence_time'].replace("Z", "+00:00"))
-                now = datetime.now(timezone.utc)
-                if now < game_time:
-                    update_game(game, games_db=games)
-            return response.json()
-        else:
-            return jsonify([{"error", "Non 200 success status"}])
-    except requests.exceptions.Timeout:
-        print("Request timed out")
-        return jsonify({"error": "Request timed out"})
-    except requests.exceptions.HTTPError as e:
-        print("HTTP error:", e)
-        return jsonify({"error": f"HTTP error: {e}"})
-    except Exception as e:
-        print("Other error:", e)
-        return jsonify({"error": f"Other error: {e}"})
-    
-def odds_refresh_thread():
-    while True:
-        sleep_time_hours = 8
-        seconds_per_hour = 3600
-        if(datetime.now().isoweekday() == 4 or datetime.now().isoweekday() == 1):
-            sleep_time_hours = 2
-        if(datetime.now().isoweekday() == 7):
-            sleep_time_hours = 1
-        sleep_time = sleep_time_hours * seconds_per_hour
-        print(f"Pulling odds in {sleep_time_hours} hour(s)...")
-        time.sleep(sleep_time)
-        try:
-            print("Pulling odds api now...")
-            call_odds_api('NFL')
-        except Exception as e:
-            print("Could not call odds-api, likely out of credits or service is down")
-
-
 @app.route('/api/odds/scores', methods=['POST'])
 def get_scores():
     data = request.json
@@ -306,7 +246,4 @@ def get_user_data(player_code):
     return response_json
 
 if __name__ == '__main__':
-    odds_thread = threading.Thread(target=odds_refresh_thread, daemon=True)
-    odds_thread.start()
-
     app.run(host='0.0.0.0', port=5000, debug=True)
