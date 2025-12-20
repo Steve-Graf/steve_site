@@ -45,9 +45,14 @@ async function updateGamePick(gameId, awayTeam, homeTeam, selectedTeam, spread, 
 
 export default function OddsColumn({ gameId, awayTeam, homeTeam, selectedTeam, label, values, gameDate, canClick }) {
     const [selected, setSelected] = useState(null);
+    const [isWinning, setIsWinning] = useState(-1);
     // this function is passed to the child element, so that setSelected is called here
     const handleClick = async (spreadValueIndex, entry) => {
+        if(selected == entry){
+            return;
+        }
         if(entry != ""){
+            setIsWinning(-1);
             if (selected === entry) {
                 setSelected(null);
             } else {
@@ -63,12 +68,57 @@ export default function OddsColumn({ gameId, awayTeam, homeTeam, selectedTeam, l
         }
     };
 
+    // useEffect Hook runs after the component renders
+    useEffect(() => {
+        // Define the async function inside the useEffect
+        const fetchGameState = async () => {
+            try {
+                const gameData = {
+                    playerCode: localStorage.getItem('userCode'),
+                    gameId: gameId
+                };
+                const response = await fetch(API_URL+'game-state', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(gameData)
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if(data.error){
+                    return;
+                }
+                if(data['game_state'] == 'win'){
+                    setIsWinning(1);
+                }else{
+                    setIsWinning(0);
+                }
+            } catch (e) {
+                console.error('Failed to fetch game state:', e);
+            }
+        };
+        if(label == 'Spread'){
+            fetchGameState();
+        }
+    }, []);
+
     return (
         <div className="odds-column">
             <div className="column-header">{label}</div>
-            <ColumnEntry value={values[0]} isSelected={(label == 'Spread') && (selected == "away" || (selectedTeam == awayTeam && selected == null))} onClick={() => canClick ? handleClick(0, "away") : handleClick(-1, "")} />
+            <ColumnEntry
+                value={values[0]} isSelected={(label == 'Spread') && (selected == "away" || (selectedTeam == awayTeam && selected == null))}
+                onClick={() => canClick ? handleClick(0, "away") : handleClick(-1, "")}
+                winning = {!canClick ? isWinning : -1}
+            />
             <div className="column-separator"></div>
-            <ColumnEntry value={values[1]} isSelected={(label == 'Spread') && (selected == "home" || (selectedTeam == homeTeam && selected == null))} onClick={() => canClick ? handleClick(1, "home") : handleClick(-1, "")}/>
+            <ColumnEntry
+                value={values[1]} isSelected={(label == 'Spread') && (selected == "home" || (selectedTeam == homeTeam && selected == null))}
+                onClick={() => canClick ? handleClick(1, "home") : handleClick(-1, "")}
+                winning = {!canClick ? isWinning : -1}
+            />
         </div>
     );
 }

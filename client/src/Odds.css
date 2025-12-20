@@ -128,6 +128,14 @@
     outline: 1px solid #2e1f01;
 }
 
+.column-value-selected.column-status-lose{
+    background: #d10000 !important;
+}
+
+.column-value-selected.column-status-win{
+    background: #189f18 !important;
+}
+
 .column-separator{
     background: #2e1f01;
     height: 1px;

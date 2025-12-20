@@ -122,6 +122,49 @@ def odds(sport):
     for sorted_game in games_sorted:
         sorted_game = update_game_score(sorted_game)
     return jsonify(games_sorted)
+
+@app.route('/api/odds/game-state', methods=['POST'])
+def game_state():
+    data = request.json
+    game_state = 'none'
+    try:
+        game_id = data["gameId"]
+        player_code = data["playerCode"]
+        game = games.find_one({
+            "gameId": game_id
+        })
+        if(game):
+            # calculate the game state
+            print(game)
+            # get the picks for the user
+            pick_data = get_pick(game_id, player_code)
+            try:
+                away_points = float(game['awayScore'])
+                home_points = float(game['homeScore'])
+                # print(f'Home: {game['homeTeam']} {game['homeScore']}')
+                # print(f'Away: {game['awayTeam']} {game['awayScore']}')
+                points_spread = game['gameSpread']
+                if(game['gameSpreadTeam'] == game['homeTeam']):
+                    home_points += points_spread
+                elif(game['gameSpreadTeam'] == game['awayTeam']):
+                    away_points += points_spread
+                spread_coverer = 'Push'
+                if home_points > away_points:
+                    spread_coverer = game['homeTeam']
+                elif(away_points > home_points):
+                    spread_coverer = game['awayTeam']
+                print(f'Spread team:{game['gameSpreadTeam']}, points:{game['gameSpread']}, bet winner:{spread_coverer}')
+                print(pick_data.get('selectedTeam'))
+                if(pick_data.get('selectedTeam') == spread_coverer):
+                    game_state = 'win'
+                else:
+                    game_state = 'lose'
+            except Exception as e:
+                print(f'Could not find data for game: {e}')
+                pass
+    except:
+        print(f'Could not find game')
+    return jsonify({"game_state": game_state})
     
 def update_game(game_json, games_db=None):
     print(f'Updating game {game_json['id']}...')
@@ -214,6 +257,13 @@ def get_user(player_code):
         create_user(player_code)
         user = users.find_one({"playerCode": player_code}, {"_id": 0})
         return jsonify(user)
+    
+def get_pick(game_id, player_code):
+    user = users.find_one({"playerCode": player_code})
+    if(user):
+        for pick_id, pick_data in user.get('picks', {}).items():
+            if(pick_id == game_id):
+                return pick_data
 
 @app.route('/api/odds/update-pick', methods=['POST'])
 def update_pick():

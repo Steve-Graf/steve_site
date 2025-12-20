@@ -67,9 +67,11 @@ global odds_json
 odds_json = ''
 global last_odds_ping_unix
 last_odds_ping_unix = None
-def call_odds_api(sport):
+def call_odds_api(sport, backup_key=False):
     print(f"Pinging odds API for {sport}...")
     api_key = keys.odds_api
+    if(backup_key):
+        api_key = keys.odds_api_backup
     sport_key = ''
     if(sport == 'NFL'):
         sport_key = 'americanfootball_nfl'
@@ -100,10 +102,18 @@ def call_odds_api(sport):
         return jsonify({"error": "Request timed out"})
     except requests.exceptions.HTTPError as e:
         print("HTTP error:", e)
-        return jsonify({"error": f"HTTP error: {e}"})
+        if(not backup_key):
+           print("Retrying with backup API key...")
+           call_odds_api(sport, backup_key=True)
+        else:
+            return jsonify({"error": f"HTTP error: {e}"})
     except Exception as e:
         print("Other error:", e)
-        return jsonify({"error": f"Other error: {e}"})
+        if(not backup_key):
+           print("Retrying with backup API key...")
+           call_odds_api(sport, backup_key=True)
+        else:
+            return jsonify({"error": f"Other error: {e}"})
 
 if __name__ == '__main__':
     while True:

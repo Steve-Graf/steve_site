@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import threading
 import json
 from datetime import datetime, timedelta, timezone
+import time
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["mydb"]
@@ -84,4 +85,6 @@ def update_games_on_day(yyyymmdd):
     return True
 
 if __name__ == '__main__':
-    get_scores_from_week(16)
+    while True:
+        get_scores_from_week(16)
+        time.sleep(60)
