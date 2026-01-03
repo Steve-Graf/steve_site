@@ -2,6 +2,7 @@ import React, {useState, useEffect, useMemo} from 'react';
 import './Odds.css';
 import ColumnEntry from './ColumnEntry.jsx';
 const API_URL = import.meta.env.VITE_API_URL;
+import {showAlert} from './alerts.js';
 
 function formatDate(date){
     const d = new Date(date);
@@ -36,6 +37,7 @@ async function updateGamePick(gameId, awayTeam, homeTeam, selectedTeam, spread, 
         }
         const data = await response.json();
         console.log(data);
+        showAlert("Pick updated.");
     } catch (e) {
         console.error('Failed to fetch game odds:', e);
     } finally {

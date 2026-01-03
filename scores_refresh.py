@@ -86,5 +86,5 @@ def update_games_on_day(yyyymmdd):
 
 if __name__ == '__main__':
     while True:
-        get_scores_from_week(16)
+        get_scores_from_week(18)
         time.sleep(60)

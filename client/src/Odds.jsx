@@ -5,6 +5,7 @@ import GameRow from './GameRow.jsx';
 import Popup from './Popup.jsx';
 import MenuButton from './MenuButton.jsx';
 import AppContext from './AppContext.jsx';
+import {showAlert} from './alerts.js';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -78,7 +79,7 @@ function Odds() {
 
     function getShowPopup(){
         let showPopup = localStorage.getItem('showPopup', true);
-        if(showPopup == null || showPopup === 'true' || showPopup == true){
+        if(showPopup == null || showPopup == 'null' || showPopup === 'true' || showPopup == true){
             localStorage.setItem('showPopup', false);
         }
         setShowPopup(showPopup === 'true');
@@ -145,14 +146,20 @@ function Odds() {
 
     return (
         <div>
-            <AppContext.Provider value={{ userData }}>
-                <MenuButton title={'Profile'}/>
-            </AppContext.Provider>
+            <div id="alerts-wrapper"></div>
             <h1 className="dave-title">
                 Dave's Odds
             </h1>
+            <AppContext.Provider value={{ userData }}>
+                <div className="menu-buttons-wrapper">
+                    <MenuButton id='profile' title={'Profile'}/>
+                    <MenuButton id='stats' title={'Stats'}/>
+                    <MenuButton id='points' title={'Points'}/>
+                    <div onClick={() => setShowPopup(true)}><MenuButton id='help' title={'Help'}/></div>
+                </div>
+            </AppContext.Provider>
             {showPopup && 
-                <Popup title={'New here?'} description={'Welcome to a hobby project I set up for my dad, Dave.<br><br>To save your picks, click on the spread and O/U columns.<br><br>I\'ve assigned each new user a unique code. You can view this code in the "Profile" section. The "Profile" section is also where you can update your username for the leaderboards.<br><br>PLEASE NOTE: This code is unique and should be treated as your password. You can use this code to login to other devices.'} backgroundClick={handlePopupBackgroundClick}/>
+                <Popup title={'New here?'} description={'Welcome to a hobby project I set up for my dad, Dave.<br><br>To save your picks, click on the tiles in the spread columns.<br><br>I\'ve assigned each new user a unique code. You can view this code in the "Profile" section. The "Profile" section is also where you can update your username for the leaderboards.<br><br>PLEASE NOTE: This code is unique and should be treated as your password. You can use this code to login to other devices.'} backgroundClick={handlePopupBackgroundClick}/>
             }
             
             {(loading || userLoading) && <p className="status-p">Loading...</p>}

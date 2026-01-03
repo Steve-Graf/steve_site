@@ -135,9 +135,10 @@ def game_state():
         })
         if(game):
             # calculate the game state
-            print(game)
+            # print(game)
             # get the picks for the user
             pick_data = get_pick(game_id, player_code)
+            print(pick_data)
             try:
                 away_points = float(game['awayScore'])
                 home_points = float(game['homeScore'])
@@ -153,8 +154,8 @@ def game_state():
                     spread_coverer = game['homeTeam']
                 elif(away_points > home_points):
                     spread_coverer = game['awayTeam']
-                print(f'Spread team:{game['gameSpreadTeam']}, points:{game['gameSpread']}, bet winner:{spread_coverer}')
-                print(pick_data.get('selectedTeam'))
+                # print(f'Spread team:{game['gameSpreadTeam']}, points:{game['gameSpread']}, bet winner:{spread_coverer}')
+                # print(pick_data.get('selectedTeam'))
                 if(pick_data.get('selectedTeam') == spread_coverer):
                     game_state = 'win'
                 else:
@@ -284,6 +285,9 @@ def update_pick():
         {"playerCode": player_code},
         {"$set": {f"picks.{game_id}": new_pick}}
     )
+
+    # for "trend" logic, check if pick is already in db
+    # if in db, compare if pick is different and increment/decrement the away/home pick count in the overall picks table
 
     return jsonify({
         "status": "success",

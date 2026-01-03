@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import time
 import json
+from datetime import datetime, timezone
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["mydb"]
@@ -40,6 +41,12 @@ if __name__ == '__main__':
                 "gameId": pick_id
             })
             try:
+                # check if the game has not started yet
+                game_time_utc = game['gameTime'].replace(tzinfo=timezone.utc)
+                now_utc = datetime.now(timezone.utc)
+                if game_time_utc > now_utc:
+                    continue
+
                 away_points = float(game['awayScore'])
                 home_points = float(game['homeScore'])
                 # print(f'Home: {game['homeTeam']} {game['homeScore']}')
@@ -59,7 +66,6 @@ if __name__ == '__main__':
                     user_points += 1
                 total_picks += 1
             except Exception as e:
-                # print(f'Could not find data for game: {e}')
                 pass
         print(f"User's points:{user_points}")
         print(f"Total picks:{total_picks}")

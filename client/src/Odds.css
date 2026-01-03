@@ -6,6 +6,7 @@
     margin: 0 auto;
     background-color: #619e51;
     outline: 10px solid #ffffff;
+    margin-bottom: 10px;
     letter-spacing: 1px;
     font-family: 'NFL-browns';
     color: #fe3c00;
@@ -13,6 +14,47 @@
     -webkit-text-stroke-width: 2px;
     -webkit-text-stroke-color: #ffffff;
     user-select: none;
+    text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+}
+
+#alerts-wrapper{
+    position: fixed;
+    right: 30px;
+    top: 20px;
+    width: 150px;
+    height: auto;
+    z-index: 3;
+}
+.alert-notification{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background: #fff;
+    padding: 10px;
+    cursor: pointer;
+    user-select: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+}
+.alert-notification.show{
+    opacity: 1;
+}
+.alert-notification-icon{
+    width: 25px;
+    height: 25px;
+    margin-right: 5px;
+    background-image: url("assets/icons/check-circle.svg");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.alert-notification-text{
+    font-size: 14px;
+    flex-grow: 1;
 }
 
 .status-p{
@@ -158,25 +200,45 @@
 .time-separator-text{
     margin: 0 10px;
 }
-.user-popup{
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.menu-buttons-wrapper-fixed{
     position: fixed;
     top: 20px;
     right: 20px;
-    cursor: pointer;
-    background: white;
-    border-radius: 15px;
-    border: 1px solid black;
-    user-select: none;
-    padding: 8px 10px;
     z-index: 2;
+}
+.menu-buttons-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    background: #eee0d3;
+    /* border-bottom: 5px solid #fff; */
+}
+.user-popup{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    height: 20px;
+    padding: 5px 10px;
+    background: #fff;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    border: 1px solid #c1c1c1;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #000;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+    width: 80px;
 }
 .user-popup-icon{
     width: 20px;
     height: 20px;
-    margin-left: 5px;
+    margin-right: 5px;
+}
+.user-popup-text{
+    width: 100%;
+    text-align: center;
 }
 
 .popup-wrapper{
@@ -292,6 +354,7 @@
     .dave-title{
         outline-width: 5px;
         font-size: 64px;
+        margin-bottom: 5px;
     }
     .odds-column{
         width: auto;
@@ -299,5 +362,8 @@
     .column-header{
         width: auto;
         padding: 0 15px;
+    }
+    .user-popup{
+        width: auto;
     }
 }
