@@ -1,5 +1,6 @@
 import './Odds.css';
 import ProfilePopup from './ProfilePopup';
+import StatsPopup from './StatsPopup';
 import React, {useState, useEffect} from 'react';
 import profileIcon from './assets/icons/profile.svg';
 import statsIcon from './assets/icons/list.svg';
@@ -24,7 +25,7 @@ export default function MenuButton({id, title}) {
 
     function handleClick(){
         setShowPopup(true);
-        if(id == 'stats' || id == 'points'){
+        if(id == 'points'){
             alert('Coming soon!');
         }
     }
@@ -37,6 +38,11 @@ export default function MenuButton({id, title}) {
         <>
             {(showPopup && id == 'profile') && 
                 <ProfilePopup 
+                    backgroundClick={handlePopupBackgroundClick}
+                />
+            }
+            {(showPopup && id == 'stats') && 
+                <StatsPopup 
                     backgroundClick={handlePopupBackgroundClick}
                 />
             }

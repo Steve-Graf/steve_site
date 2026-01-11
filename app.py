@@ -12,6 +12,7 @@ import os
 from dateutil.parser import isoparse
 from bson import ObjectId
 import json
+from collections import Counter
 
 app = Flask(__name__, static_folder='client/dist/assets', template_folder='client/dist')
 CORS(app, origins=['http://localhost:5173', 'https://stevegraf.com'])
@@ -280,14 +281,71 @@ def update_pick():
         "gameSpread": data.get("gameSpread")
     }
 
+    previous_entry = users.find_one(
+        {"playerCode": player_code},
+        {f"picks.{game_id}": 1}
+    )
+
+    old_pick = None
+    if previous_entry and "picks" in previous_entry and game_id in previous_entry["picks"]:
+        old_pick = previous_entry["picks"][game_id]
+    print(old_pick)
+    game_result = games.find_one(
+        {"gameId": game_id}
+    )
+    print(game_result)
+    if old_pick:
+        old_team = old_pick.get("selectedTeam")
+        new_team = new_pick.get("selectedTeam")
+
+        if old_team != new_team:
+            # decrement old team
+            if old_team == new_pick["homeTeam"]:
+                games.update_one(
+                    {
+                        "gameId": game_id,
+                        "homePickCount": {"$gt": 0}
+                    },
+                    {"$inc": {"homePickCount": -1}}
+                )
+            elif old_team == new_pick["awayTeam"]:
+                games.update_one(
+                    {
+                        "gameId": game_id,
+                        "awayPickCount": {"$gt": 0}
+                    },
+                    {"$inc": {"awayPickCount": -1}}
+                )
+
+            # increment new team
+            if new_team == new_pick["homeTeam"]:
+                games.update_one(
+                    {"gameId": game_id},
+                    {"$inc": {"homePickCount": 1}}
+                )
+            elif new_team == new_pick["awayTeam"]:
+                games.update_one(
+                    {"gameId": game_id},
+                    {"$inc": {"awayPickCount": 1}}
+                )
+    else:
+        # brand new pick → just increment
+        if new_pick["selectedTeam"] == new_pick["homeTeam"]:
+            games.update_one(
+                {"gameId": game_id},
+                {"$inc": {"homePickCount": 1}}
+            )
+        elif new_pick["selectedTeam"] == new_pick["awayTeam"]:
+            games.update_one(
+                {"gameId": game_id},
+                {"$inc": {"awayPickCount": 1}}
+            )
+
     # update OR insert — doesn't matter; $set handles both
     result = users.update_one(
         {"playerCode": player_code},
         {"$set": {f"picks.{game_id}": new_pick}}
     )
-
-    # for "trend" logic, check if pick is already in db
-    # if in db, compare if pick is different and increment/decrement the away/home pick count in the overall picks table
 
     return jsonify({
         "status": "success",
@@ -298,6 +356,136 @@ def update_pick():
 def get_user_data(player_code):
     response_json = get_user(player_code)
     return response_json
+
+@app.route('/api/odds/stats/<player_code>')
+def get_user_stats(player_code):
+    print(player_code)
+    response_json = get_stats(player_code)
+    return response_json
+
+def get_stats(player_code):
+    user = users.find_one({"playerCode": player_code})
+    user_points = 0
+    total_picks = 0
+    selected_teams = []
+    underdog_teams = []
+    underdog_winners = 0
+    favored_teams = []
+    favored_winners = 0
+    favorite_team = ''
+    favorite_team_times_picked = 0
+    best_team = ''
+    best_team_win_count = 0
+    worst_team = ''
+    worst_team_loss_count = 0
+    for pick_id, pick_data in user.get('picks', {}).items():
+        # print(f"{pick_id} -- {pick_data.get('selectedTeam')}")
+        game = games.find_one({
+            "gameId": pick_id
+        })
+        try:
+            # check if the game has not started yet
+            game_time_utc = game['gameTime'].replace(tzinfo=timezone.utc)
+            now_utc = datetime.now(timezone.utc)
+            if game_time_utc > now_utc:
+                continue
+
+            away_points = float(game['awayScore'])
+            home_points = float(game['homeScore'])
+            # print(f'Home: {game['homeTeam']} {game['homeScore']}')
+            # print(f'Away: {game['awayTeam']} {game['awayScore']}')
+            points_spread = game['gameSpread']
+            if(game['gameSpreadTeam'] == game['homeTeam']):
+                home_points += points_spread
+            elif(game['gameSpreadTeam'] == game['awayTeam']):
+                away_points += points_spread
+            spread_coverer = 'Push'
+            if home_points > away_points:
+                spread_coverer = game['homeTeam']
+            elif(away_points > home_points):
+                spread_coverer = game['awayTeam']
+            # print(f'Spread team:{game['gameSpreadTeam']}, points:{game['gameSpread']}, bet winner:{spread_coverer}')
+            is_winner = False
+            if(pick_data.get('selectedTeam') == spread_coverer):
+                user_points += 1
+                is_winner = True
+            
+            is_favorite = True
+            if('+' in str(pick_data.get('gameSpread'))):
+                is_favorite = False
+            
+            pick_info = {
+                'is_winner': is_winner,
+                'selected_team': pick_data.get('selectedTeam')
+            }
+            if(is_favorite):
+                favored_teams.append(pick_info)
+            else:
+                underdog_teams.append(pick_info)
+            selected_teams.append(pick_info)
+
+            total_picks += 1
+        except Exception as e:
+            # print(e)
+            pass
+    print(f"User's points:{user_points}")
+    print(f"Total picks:{total_picks}")
+    if(total_picks > 0):
+        # print(f"Underdog picks:{len(underdog_teams)}")
+        for underdog in underdog_teams:
+            if(underdog['is_winner']):
+                underdog_winners += 1
+        # print(f"Underdog winners:{underdog_winners}")
+
+        # print(f"Favored picks:{len(favored_teams)}")
+        for favorite in favored_teams:
+            if(favorite['is_winner']):
+                favored_winners += 1
+        # print(f"Favored winners:{favored_winners}")
+
+        selected_team_names = []
+        winning_team_names = []
+        losing_team_names = []
+        for team in selected_teams:
+            selected_team_names.append(team['selected_team'])
+            if(team['is_winner']):
+                winning_team_names.append(team['selected_team'])
+            else:
+                losing_team_names.append(team['selected_team'])
+        favorite_team_counts = Counter(selected_team_names)
+        most_frequent_selected_team_tuple = favorite_team_counts.most_common(1)
+        favorite_team = most_frequent_selected_team_tuple[0][0]
+        favorite_team_times_picked = most_frequent_selected_team_tuple[0][1]
+        best_team_counts = Counter(winning_team_names)
+        best_team_tuple = best_team_counts.most_common(1)
+        best_team = best_team_tuple[0][0]
+        best_team_win_count = best_team_tuple[0][1]
+        worst_team_counts = Counter(losing_team_names)
+        worst_team_tuple = worst_team_counts.most_common(1)
+        worst_team = worst_team_tuple[0][0]
+        worst_team_loss_count = worst_team_tuple[0][1]
+
+        return jsonify({
+            "status": "success",
+            "total": total_picks,
+            "wins": user_points,
+            "underdog_count": len(underdog_teams),
+            "underdog_wins_count": underdog_winners,
+            "favored_count": len(favored_teams),
+            "favored_wins_count": favored_winners,
+            "favorite_team": favorite_team,
+            "favorite_team_count": favorite_team_times_picked,
+            "best_team": best_team,
+            "best_team_win_count": best_team_win_count,
+            "best_team_pick_count": selected_team_names.count(best_team),
+            "worst_team": worst_team,
+            "worst_team_loss_count": worst_team_loss_count,
+            "worst_team_pick_count": selected_team_names.count(worst_team)
+        })
+
+    return jsonify({
+        "status": "failed"
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

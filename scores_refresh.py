@@ -10,14 +10,17 @@ db = client["mydb"]
 games = db["games"]
 games.create_index("gameId", unique=True)
 
-def get_scores_from_week(week_number=None):
+def get_scores_from_week(week_number=None, full_label=''):
     # pull in the week info from nfl_schedule.json
     weeks = None
     nfl_week_days = []
     with open("nfl_schedule.json") as f:
         weeks = json.load(f)
     for nfl_week in weeks:
-        if(nfl_week['label'] == f'Week {week_number}'):
+        week_label = f'Week {week_number}'
+        if(full_label != ''):
+            week_label = full_label
+        if(nfl_week['label'] == week_label):
             start_dt = datetime.strptime(nfl_week["startDate"], "%Y-%m-%dT%H:%MZ")
             end_dt = datetime.strptime(nfl_week["endDate"], "%Y-%m-%dT%H:%MZ")
             current = start_dt.date()
@@ -86,5 +89,5 @@ def update_games_on_day(yyyymmdd):
 
 if __name__ == '__main__':
     while True:
-        get_scores_from_week(18)
+        get_scores_from_week(18, 'Wild Card')
         time.sleep(60)

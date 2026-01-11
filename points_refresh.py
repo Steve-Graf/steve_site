@@ -10,7 +10,6 @@ users.create_index("playerCode", unique=True)
 games = db["games"]
 games.create_index("gameId", unique=True)
 
-
 if __name__ == '__main__':
     # cursor = games.find()
     # for game in cursor:
