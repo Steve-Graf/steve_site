@@ -1,0 +1,98 @@
+{% extends "bingo/base.html" %}
+{% block title %}Create Board — Social Bingo{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('bingo_pages.static', filename='css/pages/create.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="create-page">
+  <div class="create-page__header">
+    <h1>Create a Board</h1>
+    <p>Choose a size, give it a title, and add your tile pool. Every player gets a unique random board drawn from your tile pool.</p>
+  </div>
+
+  <form class="create-form card" id="create-form">
+    <div class="form-group">
+      <label class="form-label" for="title">Board Title</label>
+      <input
+        class="form-input"
+        type="text"
+        id="title"
+        name="title"
+        placeholder="e.g. Golf Trip Bingo"
+        maxlength="255"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Board Size</label>
+      <div class="size-selector">
+        <label class="size-option">
+          <input type="radio" name="board_size" value="3" checked />
+          <span class="size-option__card">
+            <span class="size-option__label">3×3</span>
+            <span class="size-option__sub">9 tiles</span>
+          </span>
+        </label>
+        <label class="size-option">
+          <input type="radio" name="board_size" value="4" />
+          <span class="size-option__card">
+            <span class="size-option__label">4×4</span>
+            <span class="size-option__sub">16 tiles</span>
+          </span>
+        </label>
+        <label class="size-option">
+          <input type="radio" name="board_size" value="5" />
+          <span class="size-option__card">
+            <span class="size-option__label">5×5</span>
+            <span class="size-option__sub">25 tiles</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Start from a Template <span class="form-label__hint">Optional — loads a starter tile pool</span></label>
+      <div class="tile-input-row">
+        <select class="form-input" id="template-select">
+          <option value="">— choose a template —</option>
+          <option value="golf_trip">Golf Trip</option>
+          <option value="football_game">Football Game</option>
+          <option value="night_out">Night Out</option>
+        </select>
+        <button type="button" class="btn btn-secondary" id="load-template-btn">Load</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="tile-input">
+        Tile Pool
+        <span class="form-label__hint" id="tile-count-hint">Add at least <span id="min-tiles">16</span> tiles</span>
+      </label>
+      <div class="tile-input-row">
+        <input
+          class="form-input"
+          type="text"
+          id="tile-input"
+          placeholder="Type a new tile label…"
+          maxlength="100"
+        />
+        <button type="button" class="btn btn-secondary" id="add-tile-btn">Add</button>
+      </div>
+      <ul class="tile-list" id="tile-list"></ul>
+    </div>
+
+    <div class="form-error" id="form-error" hidden></div>
+
+    <div class="form-actions">
+      <a href="{{ url_for('bingo_pages.index') }}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Create Board</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{{ url_for('bingo_pages.static', filename='js/create.js') }}"></script>
+{% endblock %}

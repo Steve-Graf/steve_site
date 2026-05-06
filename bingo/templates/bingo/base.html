@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Social Bingo{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('bingo_pages.static', filename='css/main.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('bingo_pages.static', filename='css/components.css') }}" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <nav class="nav">
+    <a href="{{ url_for('bingo_pages.index') }}" class="nav__logo">Social Bingo</a>
+    <div class="nav__actions">
+      {% if user %}
+        <div class="nav__user">
+          {% if user.avatar_url %}
+            <img class="nav__avatar" src="{{ user.avatar_url }}" alt="{{ user.name }}" />
+          {% endif %}
+          <span class="nav__name">{{ user.name }}</span>
+        </div>
+        <a href="{{ url_for('bingo_pages.create_board') }}" class="btn btn-primary btn--sm nav__new-board">New Board</a>
+        <a href="{{ url_for('bingo_auth.logout') }}" class="btn btn-ghost btn--sm">Sign out</a>
+      {% else %}
+        <a href="{{ url_for('bingo_pages.login') }}" class="btn btn-primary btn--sm">Sign in</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+          <div class="flash flash--{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

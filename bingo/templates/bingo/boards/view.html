@@ -1,0 +1,73 @@
+{% extends "bingo/base.html" %}
+{% block title %}{{ game.title }} — Social Bingo{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('bingo_pages.static', filename='css/pages/board.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="board-page">
+  <div class="board-page__header">
+    <h1>{{ game.title }}</h1>
+    <div class="board-page__meta">
+{% if player_board.has_bingo %}
+        <span class="badge badge--bingo">BINGO!</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="board-page__share">
+    <span class="board-page__share-label">Share code:</span>
+    <span class="board-page__share-code" id="share-code">{{ game.share_code }}</span>
+    <button class="btn btn-secondary btn--sm" id="copy-code-btn" type="button">Copy</button>
+  </div>
+
+  <div
+    class="bingo-grid"
+    style="--grid-size: {{ game.board_size }}"
+    id="bingo-grid"
+    data-board-id="{{ player_board.id }}"
+  >
+    {% for row_idx in range(game.board_size) %}
+      {% for col_idx in range(game.board_size) %}
+        {% set label = player_board.tile_layout[row_idx][col_idx] %}
+        {% set done = player_board.completion_state[row_idx][col_idx] %}
+        <button
+          class="tile{% if done %} tile--completed{% endif %}"
+          data-row="{{ row_idx }}"
+          data-col="{{ col_idx }}"
+          aria-pressed="{{ 'true' if done else 'false' }}"
+        >
+          <span class="tile__label">{{ label }}</span>
+        </button>
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  {% if player_board.has_bingo %}
+    <div class="bingo-banner card" id="bingo-banner">
+      <span class="bingo-banner__text">🎉 BINGO!</span>
+    </div>
+  {% else %}
+    <div class="bingo-banner card" id="bingo-banner" hidden>
+      <span class="bingo-banner__text">🎉 BINGO!</span>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{{ url_for('bingo_pages.static', filename='js/board.js') }}"></script>
+  <script>
+    (function () {
+      const btn = document.getElementById("copy-code-btn");
+      const code = document.getElementById("share-code");
+      if (!btn || !code) return;
+      btn.addEventListener("click", function () {
+        navigator.clipboard.writeText(code.textContent.trim()).then(function () {
+          btn.textContent = "Copied!";
+          setTimeout(function () { btn.textContent = "Copy"; }, 2000);
+        });
+      });
+    })();
+  </script>
+{% endblock %}

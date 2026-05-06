@@ -1,0 +1,170 @@
+/* ── Hero ─────────────────────────────────────────── */
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem 1rem 1rem;
+  margin-bottom: 3rem;
+  border-bottom: 1px solid #e5ebee;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.hero__content {
+  max-width: 520px;
+}
+
+.hero__title {
+  font-family: CompactaBlackRegular, var(--font-base);
+  font-size: clamp(2.5rem, 6vw, 3.75rem);
+  font-weight: 800;
+  color: var(--color-dark-blue);
+  margin-bottom: 0.75rem;
+  letter-spacing: 1px;
+}
+
+.hero__subtitle {
+  font-size: 1.05rem;
+  color: var(--color-slate);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+/* ── Join section ────────────────────────────────── */
+
+.join-section {
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.join-section__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-dark-blue);
+  white-space: nowrap;
+}
+
+.join-section__hint {
+  font-size: 0.85rem;
+  color: var(--color-slate);
+  flex: 1 1 auto;
+}
+
+.join-section__form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.join-section__input {
+  width: 10ch;
+  padding: 0.45rem 0.6rem;
+  border: 2px solid var(--color-slate);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-base);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+.join-section__input:focus {
+  outline: none;
+  border-color: var(--color-dark-blue);
+}
+
+/* ── Boards section ──────────────────────────────── */
+
+.boards-section {
+  margin-top: 1rem;
+}
+
+.boards-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.boards-section__header h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-dark-blue);
+}
+
+.boards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.board-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.board-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.board-card__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-dark-blue);
+}
+
+.board-card__meta {
+  font-size: 0.85rem;
+  color: var(--color-slate);
+}
+
+.board-card__actions {
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+/* ── Empty state ─────────────────────────────────── */
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  color: var(--color-slate);
+}
+
+/* ── Features (logged-out) ───────────────────────── */
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.feature h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-dark-blue);
+  margin-bottom: 0.4rem;
+}
+
+.feature p {
+  font-size: 0.9rem;
+  color: var(--color-slate);
+  line-height: 1.5;
+}

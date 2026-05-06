@@ -2,65 +2,59 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Projects
 
-NFL sports betting odds tracker — users pick game winners against the spread, and the app tracks win/loss stats across a season. Deployed at stevegraf.com.
+This repo hosts two independent apps under a single Flask server, deployed at stevegraf.com.
 
-## Commands
+### NFL Odds Tracker
+Pick NFL game winners against the spread; tracks win/loss stats across a season.
 
-### Frontend (React/Vite)
-```bash
-cd client
-npm run dev        # Dev server at localhost:5173
-npm run build      # Production build → client/dist/
-npm run lint       # ESLint check
-npm run preview    # Preview production build locally
-```
+- **Entry points**: `app.py` (Flask), `client/` (React/Vite frontend)
+- **Key files**:
+  - [app.py](app.py) — Flask entry point; registers blueprints and template routes
+  - [odds/odds_routes.py](odds/odds_routes.py) — all odds API routes and MongoDB logic
+  - [client/odds_src/Odds.jsx](client/odds_src/Odds.jsx) — main React component
+  - [client/odds_src/GameRow.jsx](client/odds_src/GameRow.jsx) — individual game row with pick UI
+  - [odds/nfl_schedule.json](odds/nfl_schedule.json) — hardcoded NFL week schedule
+- **Background workers** (run independently or via cron):
+  - `odds/odds_refresh.py` — fetch spreads from The Odds API
+  - `odds/scores_refresh.py` — poll ESPN for live scores (60s intervals)
+  - `odds/points_refresh.py` — recalculate user points after games
+  - `odds/trend_update.py` — update pick count trends
+- **Database**: MongoDB (`mongodb://localhost:27017/`). Direct pymongo, no ORM. Collections: `games`, `users`.
+- **User identity**: random 4-character code in `localStorage`; no authentication.
 
-### Backend (Flask)
+### Social Bingo
+Create and share bingo boards; players get unique random boards drawn from a shared tile pool.
+
+- **Entry points**: registered as a Flask Blueprint at `/bingo`
+- **Key files**:
+  - [bingo/__init__.py](bingo/__init__.py) — initializes Firebase, OAuth, and registers blueprints
+  - [bingo/blueprints/pages.py](bingo/blueprints/pages.py) — server-rendered page routes
+  - [bingo/blueprints/api.py](bingo/blueprints/api.py) — JSON API routes
+  - [bingo/blueprints/auth.py](bingo/blueprints/auth.py) — Google OAuth flow
+  - [bingo/services/bingo_service.py](bingo/services/bingo_service.py) — board generation and bingo-check logic
+  - [bingo/static/](bingo/static/) — CSS and JS (no build step; plain files)
+  - [bingo/templates/](bingo/templates/) — Jinja2 templates
+- **Database**: Firestore (credentials in `bingo/firebase_credentials.json`, git-ignored).
+- **User identity**: Google OAuth via Authlib; session stored server-side.
+
+## Running the server
+
 ```bash
 source venv/bin/activate
-python app.py      # Flask API server at localhost:5000 (debug mode)
+python app.py      # Flask dev server at localhost:5000
 ```
 
-### Background Workers (run independently or via cron)
 ```bash
-python odds/odds_refresh.py    # Fetch odds from The Odds API (3–12 hour intervals)
-python odds/scores_refresh.py  # Poll ESPN for live scores (60s intervals)
-python odds/points_refresh.py  # Recalculate user points
-python odds/trend_update.py    # Update pick count trends
+cd client
+npm run dev        # React/Vite dev server at localhost:5173
+npm run build      # Production build → client/dist/
 ```
-
-## Architecture
-
-**Frontend**: Multi-page Vite app with two entry points — `index.html` (portfolio) and `odds.html` (odds picking app). The React app mounts on `odds.html`. API base URL is set via `VITE_API_URL` in `.env` (dev) and `.env.production`.
-
-**Backend**: Flask serves REST endpoints under `/api/odds/`. SSL certs (`cert.pem`, `key.pem`) are present for HTTPS. CORS is configured for `localhost:5173` and `stevegraf.com`.
-
-**Database**: Single local MongoDB instance at `mongodb://localhost:27017/`. No ORM or migration tooling — direct pymongo calls. Key collections: `games` (odds, scores, pick counts) and `users` (player code, picks, stats).
-
-**User identity**: Each user gets a random 4-character code stored in `localStorage`. This maps to a MongoDB user document. No authentication.
-
-## Key Files
-
-- [app.py](app.py) — Flask app entry point; registers odds Blueprint and template routes
-- [odds/odds_routes.py](odds/odds_routes.py) — Flask Blueprint with all odds routes, MongoDB logic, and helper functions
-- [client/odds_src/Odds.jsx](client/odds_src/Odds.jsx) — main React component; owns game list, pick state, score polling
-- [client/odds_src/AppContext.jsx](client/odds_src/AppContext.jsx) — React context providing player code and user data
-- [client/odds_src/GameRow.jsx](client/odds_src/GameRow.jsx) — individual game row with pick UI
-- [odds/nfl_schedule.json](odds/nfl_schedule.json) — hardcoded NFL week schedule used to determine current week
-- [odds/keys.py](odds/keys.py) — API credentials (git-ignored; required for odds_refresh.py)
-
-## Data Flow
-
-1. `odds/odds_refresh.py` pulls DraftKings spreads from The Odds API → writes to `games` collection
-2. `odds/scores_refresh.py` polls ESPN every 60s during games → updates `homeScore`/`awayScore`
-3. Frontend fetches games via `GET /api/odds/sport/americanfootball_nfl`, user picks via `GET /api/odds/player/<code>`
-4. Pick submission hits `POST /api/odds/update-pick` → updates both `users.picks` and game pick counts
-5. `odds/points_refresh.py` runs after games complete to evaluate picks against spread and update win/loss stats
 
 ## Environment
 
 - `client/.env` — `VITE_API_URL=http://localhost:5000/api/odds/`
 - `client/.env.production` — `VITE_API_URL=https://stevegraf.com/api/odds/`
-- `odds/keys.py` (git-ignored) — The Odds API key and any other secrets
+- `odds/keys.py` (git-ignored) — The Odds API key
+- `bingo/.env` (git-ignored) — `SECRET_KEY`, Firebase path, Google OAuth credentials

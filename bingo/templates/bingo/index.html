@@ -1,0 +1,88 @@
+{% extends "bingo/base.html" %}
+{% block title %}Social Bingo — Home{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('bingo_pages.static', filename='css/pages/index.css') }}" />
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero__content">
+    <h1 class="hero__title">Social Bingo</h1>
+    <p class="hero__subtitle">Welcome to Social Bingo! My good friend Claude and I made this website to allow players to build custom bingo boards for any type of event.</p>
+    {% if not user %}
+      <a href="{{ url_for('bingo_pages.login') }}" class="btn btn-primary btn--lg">Get started — sign in</a>
+    {% else %}
+      <a href="{{ url_for('bingo_pages.create_board') }}" class="btn btn-primary btn--lg">Create a new board</a>
+    {% endif %}
+  </div>
+</section>
+
+{% if user %}
+  <section class="join-section card">
+    <h2 class="join-section__title">Join a game</h2>
+    <p class="join-section__hint">Enter the 4-letter code a friend shared with you.</p>
+    <form class="join-section__form" action="{{ url_for('bingo_pages.join_board') }}" method="GET">
+      <input
+        class="join-section__input"
+        type="text"
+        name="code"
+        maxlength="4"
+        placeholder="ABCD"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+        required
+      />
+      <button type="submit" class="btn btn-primary">Join</button>
+    </form>
+  </section>
+
+  <section class="boards-section">
+    <div class="boards-section__header">
+      <h2>Your Boards</h2>
+      <a href="{{ url_for('bingo_pages.create_board') }}" class="btn btn-primary btn--sm">+ New Board</a>
+    </div>
+    {% if boards %}
+      <div class="boards-grid">
+        {% for board in boards %}
+          <div class="card board-card">
+            <div class="board-card__header">
+              <span class="board-card__size-badge">{{ board.board_size }}×{{ board.board_size }}</span>
+              {% if board.is_active %}
+                <span class="badge badge--active">Active</span>
+              {% else %}
+                <span class="badge badge--inactive">Inactive</span>
+              {% endif %}
+            </div>
+            <h3 class="board-card__title">{{ board.title }}</h3>
+            <p class="board-card__meta">{{ board.tile_pool | length }} tiles · Code: <strong>{{ board.share_code }}</strong></p>
+            <div class="board-card__actions">
+              <a href="{{ url_for('bingo_pages.view_board', board_id=board.id) }}" class="btn btn-primary btn--sm">View Board</a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state card">
+        <p>You haven't created any boards yet.</p>
+        <a href="{{ url_for('bingo_pages.create_board') }}" class="btn btn-primary">Create your first board</a>
+      </div>
+    {% endif %}
+  </section>
+{% else %}
+  <section class="features">
+    <div class="feature card">
+      <h3>Create custom boards</h3>
+      <p>Define your own tile pool and let the app generate unique boards for every player.</p>
+    </div>
+    <div class="feature card">
+      <h3>Share with friends</h3>
+      <p>Share a short code and your friends can join your game instantly.</p>
+    </div>
+    <div class="feature card">
+      <h3>Any occasion</h3>
+      <p>Parties, sports games, company meetings — bingo for anything and everything.</p>
+    </div>
+  </section>
+{% endif %}
+{% endblock %}
