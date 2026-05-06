@@ -85,7 +85,7 @@ def call_odds_api(sport, backup_key=False):
         if(response.status_code == 200):
             global last_odds_ping_unix
             last_odds_ping_unix = time.time()
-            with open("last_updated.txt", "w") as f:
+            with open(os.path.join(os.path.dirname(__file__), "last_updated.txt"), "w") as f:
                 f.write(str(int(time.time())))
             # update games that are not active or complete
             odds_json = response.json()

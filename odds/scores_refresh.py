@@ -2,6 +2,7 @@ import requests
 from pymongo import MongoClient
 import threading
 import json
+import os
 from datetime import datetime, timedelta, timezone
 import time
 
@@ -14,7 +15,7 @@ def get_scores_from_week(week_number=None, full_label=''):
     # pull in the week info from nfl_schedule.json
     weeks = None
     nfl_week_days = []
-    with open("nfl_schedule.json") as f:
+    with open(os.path.join(os.path.dirname(__file__), "nfl_schedule.json")) as f:
         weeks = json.load(f)
     for nfl_week in weeks:
         week_label = f'Week {week_number}'
@@ -89,5 +90,5 @@ def update_games_on_day(yyyymmdd):
 
 if __name__ == '__main__':
     while True:
-        get_scores_from_week(18, 'Wild Card')
+        get_scores_from_week(22, 'Super Bowl')
         time.sleep(60)
