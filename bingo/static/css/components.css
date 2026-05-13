@@ -10,6 +10,8 @@
   font-size: 0.95rem;
   font-weight: 500;
   border-radius: var(--radius-md);
+  appearance: none;
+  -webkit-appearance: none;
   border: none;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
@@ -243,9 +245,13 @@
 }
 
 .tile--completed {
-  background-color: var(--color-peach);
-  border-color: var(--color-dark-blue);
+  background-color: var(--color-dark-blue);
+  border-color: var(--color-peach);
   box-shadow: var(--shadow-sm);
+}
+
+.tile--completed .tile__label {
+  color: var(--color-white);
 }
 
 .tile__label {

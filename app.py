@@ -3,6 +3,7 @@ from flask_cors import CORS
 from odds.odds_routes import odds_bp
 from bingo import init_bingo
 from bingo.config import BingoConfig
+from golf import init_golf
 
 app = Flask(__name__, static_folder='client/dist/assets', template_folder='client/dist')
 CORS(app, origins=['http://localhost:5173', 'https://stevegraf.com'])
@@ -11,6 +12,7 @@ app.config.from_object(BingoConfig)
 
 app.register_blueprint(odds_bp)
 init_bingo(app)
+init_golf(app)
 
 @app.route('/')
 def home():

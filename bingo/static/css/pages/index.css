@@ -133,6 +133,17 @@
 .board-card__actions {
   margin-top: auto;
   padding-top: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.board-card__archive-btn {
+  margin-left: auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1px;
 }
 
 /* ── Empty state ─────────────────────────────────── */

@@ -45,13 +45,20 @@
 
   {% if player_board.has_bingo %}
     <div class="bingo-banner card" id="bingo-banner">
-      <span class="bingo-banner__text">🎉 BINGO!</span>
+      <span class="bingo-banner__text">BINGO!</span>
     </div>
   {% else %}
     <div class="bingo-banner card" id="bingo-banner" hidden>
-      <span class="bingo-banner__text">🎉 BINGO!</span>
+      <span class="bingo-banner__text">BINGO!</span>
     </div>
   {% endif %}
+</div>
+
+<div id="tile-modal-backdrop" class="tile-modal-backdrop"></div>
+<div id="tile-modal" class="tile-modal" role="dialog" aria-modal="true">
+  <div class="tile-modal__handle"></div>
+  <p id="tile-modal-label" class="tile-modal__label"></p>
+  <button id="tile-modal-toggle" class="btn btn-primary tile-modal__btn" type="button">Mark as Done</button>
 </div>
 {% endblock %}
 

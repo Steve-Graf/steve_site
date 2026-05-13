@@ -5,6 +5,7 @@ from ..services.bingo_service import (
     generate_share_code,
     build_player_layout,
     empty_completion_state,
+    reshape_2d,
     check_bingo,
 )
 
@@ -114,6 +115,25 @@ def delete_board(game_id):
     return jsonify({"ok": True})
 
 
+@bingo_api_bp.route("/boards/<game_id>/archive", methods=["POST"])
+def archive_board(game_id):
+    user, err = require_auth()
+    if err:
+        return err
+
+    db = get_db()
+    game_doc = db.collection("games").document(game_id).get()
+    if not game_doc.exists:
+        return jsonify({"error": "Not found"}), 404
+
+    archived = user.get("archived_game_ids") or []
+    if game_id not in archived:
+        archived.append(game_id)
+        db.collection("users").document(user["id"]).update({"archived_game_ids": archived})
+
+    return jsonify({"ok": True})
+
+
 @bingo_api_bp.route("/boards/<game_id>/join", methods=["POST"])
 def join_board(game_id):
     user, err = require_auth()
@@ -164,11 +184,15 @@ def get_player_board(pb_id):
     if pb_doc.get("player_id") != user["id"]:
         return jsonify({"error": "Forbidden"}), 403
 
+    game_doc = db.collection("games").document(pb_doc.get("game_id")).get()
+    size = game_doc.get("board_size") if game_doc.exists else None
+    flat_layout = pb_doc.get("tile_layout")
+    flat_state = pb_doc.get("completion_state")
     return jsonify({
         "id": pb_doc.id,
         "game_id": pb_doc.get("game_id"),
-        "tile_layout": pb_doc.get("tile_layout"),
-        "completion_state": pb_doc.get("completion_state"),
+        "tile_layout": reshape_2d(flat_layout, size) if size else flat_layout,
+        "completion_state": reshape_2d(flat_state, size) if size else flat_state,
         "has_bingo": pb_doc.get("has_bingo"),
     })
 
@@ -200,12 +224,13 @@ def toggle_tile(pb_id):
     if not (0 <= row < size and 0 <= col < size):
         return jsonify({"error": "row or col out of bounds"}), 400
 
-    state = [list(r) for r in pb_doc.get("completion_state")]
-    state[row][col] = not state[row][col]
-    has_bingo = check_bingo(state, size)
+    flat_state = list(pb_doc.get("completion_state"))
+    flat_state[row * size + col] = not flat_state[row * size + col]
+    state_2d = reshape_2d(flat_state, size)
+    has_bingo = check_bingo(state_2d, size)
 
     db.collection("player_boards").document(pb_id).update({
-        "completion_state": state,
+        "completion_state": flat_state,
         "has_bingo": has_bingo,
     })
-    return jsonify({"completion_state": state, "has_bingo": has_bingo})
+    return jsonify({"completion_state": state_2d, "has_bingo": has_bingo})

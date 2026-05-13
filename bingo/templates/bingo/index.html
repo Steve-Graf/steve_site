@@ -45,19 +45,15 @@
     {% if boards %}
       <div class="boards-grid">
         {% for board in boards %}
-          <div class="card board-card">
+          <div class="card board-card" id="board-card-{{ board.id }}">
             <div class="board-card__header">
               <span class="board-card__size-badge">{{ board.board_size }}×{{ board.board_size }}</span>
-              {% if board.is_active %}
-                <span class="badge badge--active">Active</span>
-              {% else %}
-                <span class="badge badge--inactive">Inactive</span>
-              {% endif %}
             </div>
             <h3 class="board-card__title">{{ board.title }}</h3>
             <p class="board-card__meta">{{ board.tile_pool | length }} tiles · Code: <strong>{{ board.share_code }}</strong></p>
             <div class="board-card__actions">
               <a href="{{ url_for('bingo_pages.view_board', board_id=board.id) }}" class="btn btn-primary btn--sm">View Board</a>
+              <button class="btn btn-secondary btn--sm board-card__archive-btn" data-board-id="{{ board.id }}">Archive</button>
             </div>
           </div>
         {% endfor %}
@@ -85,4 +81,28 @@
     </div>
   </section>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll(".board-card__archive-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const boardId = btn.dataset.boardId;
+      btn.disabled = true;
+      const res = await fetch(`/bingo/api/boards/${boardId}/archive`, { method: "POST" });
+      if (res.ok) {
+        document.getElementById(`board-card-${boardId}`).remove();
+        const grid = document.querySelector(".boards-grid");
+        if (grid && !grid.querySelector(".board-card")) {
+          grid.outerHTML = `<div class="empty-state card">
+            <p>You haven't created any boards yet.</p>
+            <a href="{{ url_for('bingo_pages.create_board') }}" class="btn btn-primary">Create your first board</a>
+          </div>`;
+        }
+      } else {
+        btn.disabled = false;
+      }
+    });
+  });
+</script>
 {% endblock %}
