@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Golf Swing Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('golf_pages.static', filename='css/golf.css') }}">
+</head>
+<body>
+
+  <nav class="nav">
+    <span class="nav__logo">Golf Swing Analyzer</span>
+    <div class="nav__actions">
+      <button id="btn-toggle-wireframes" class="btn btn-ghost btn--sm">Wireframes: On</button>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- Comparison grid -->
+    <section class="comparison-section">
+      <div id="video-grid" class="video-grid">
+        <div id="empty-state" class="empty-state card">
+          <p>Add videos from your uploads below to start comparing swings.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Master controls -->
+    <section class="master-controls card" id="master-controls">
+      <div class="master-controls-inner">
+        <div class="playback-buttons">
+          <button id="btn-step-back" class="btn btn-secondary btn--sm" title="Step back one frame">&#9664;</button>
+          <button id="btn-master-play" class="btn btn-primary btn--sm" title="Play / Pause">&#9654;</button>
+          <button id="btn-step-fwd" class="btn btn-secondary btn--sm" title="Step forward one frame">&#9654;</button>
+        </div>
+        <div class="scrubber-wrap">
+          <input id="master-scrubber" type="range" min="0" max="1" step="0.001" value="0" class="scrubber">
+        </div>
+        <div class="speed-buttons">
+          <button class="btn btn-speed" data-rate="0.25">0.25x</button>
+          <button class="btn btn-speed" data-rate="0.5">0.5x</button>
+          <button class="btn btn-speed btn-speed--active" data-rate="1">1x</button>
+          <button class="btn btn-speed" data-rate="2">2x</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gallery -->
+    <section class="gallery-section card">
+      <div class="gallery-header">
+        <h2 class="gallery-title">My Uploads</h2>
+        <label class="btn btn-primary btn--sm" for="upload-input">
+          + Upload Video
+          <input id="upload-input" type="file" accept="video/*" multiple hidden>
+        </label>
+        <span id="upload-error" class="upload-error" hidden></span>
+      </div>
+      <div id="gallery-strip" class="gallery-strip">
+        <p class="gallery-empty">No videos uploaded yet. Upload a swing (max 30s) to get started.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Panel template (cloned by JS) -->
+  <template id="panel-template">
+    <div class="video-panel card">
+      <div class="panel-header">
+        <span class="panel-label" contenteditable="true" spellcheck="false">Swing</span>
+        <span class="panel-angle-badge badge">DTL</span>
+        <button class="btn-panel-remove" title="Remove from view">&times;</button>
+      </div>
+      <div class="panel-media">
+        <video class="panel-video" playsinline muted preload="metadata"></video>
+        <canvas class="panel-canvas"></canvas>
+      </div>
+      <div class="panel-controls">
+        <button class="btn btn-secondary btn--sm btn-panel-play" title="Play / Pause">&#9654; Play</button>
+        <button class="btn btn-secondary btn--sm btn-panel-wireframe" title="Toggle wireframe">Wireframe: On</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Gallery card template (cloned by JS) -->
+  <template id="gallery-card-template">
+    <div class="gallery-card card">
+      <div class="card-thumb-wrap">
+        <video class="card-thumb" muted preload="metadata"></video>
+      </div>
+      <div class="card-info">
+        <span class="card-name" contenteditable="true" spellcheck="false"></span>
+        <span class="card-duration"></span>
+        <button class="card-angle-badge badge">DTL</button>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-primary btn--sm btn-card-add">Add to View</button>
+        <button class="btn btn-danger btn--sm btn-card-delete">Delete</button>
+      </div>
+    </div>
+  </template>
+
+  <script type="module" src="{{ url_for('golf_pages.static', filename='js/golf.js') }}"></script>
+</body>
+</html>
