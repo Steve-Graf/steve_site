@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Navy rounded square background -->
+  <rect width="32" height="32" rx="6" fill="#344f6c"/>
+  <!-- "SG" text -->
+  <text
+    x="16" y="23"
+    font-family="'Arial Rounded MT Bold', 'Trebuchet MS', Arial, sans-serif"
+    font-weight="900"
+    font-size="18"
+    fill="white"
+    text-anchor="middle"
+    letter-spacing="-0.5"
+  >SG</text>
+  <!-- Orange underline accent -->
+  <rect x="8" y="26" width="16" height="3" rx="1.5" fill="#a75d50"/>
+</svg>

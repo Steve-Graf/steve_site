@@ -208,6 +208,7 @@
   const addBtn = document.getElementById("add-tile-btn");
   const tileList = document.getElementById("tile-list");
   const minTilesSpan = document.getElementById("min-tiles");
+  const currentTilesSpan = document.getElementById("current-tiles");
   const formError = document.getElementById("form-error");
   const submitBtn = document.getElementById("submit-btn");
   const templateSelect = document.getElementById("template-select");
@@ -230,6 +231,7 @@
   }
 
   function renderTiles() {
+    currentTilesSpan.textContent = tiles.length;
     tileList.innerHTML = "";
     tiles.forEach((label, idx) => {
       const li = document.createElement("li");

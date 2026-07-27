@@ -1,0 +1,43 @@
+{% extends "games/base.html" %}
+{% block title %}Purple — Games{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('games_pages.static', filename='css/pages/purple.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="purple-game"
+     data-sprite="{{ url_for('games_pages.static', filename='img/cards_spritesheet.png') }}">
+
+  <h1 class="pg-title">Purple</h1>
+
+  <div class="pg-score">
+    <div class="pg-score__label">Cards</div>
+    <div id="score" class="pg-score__number">0</div>
+    <div class="pg-score__best">Best: <span id="high-score">0</span></div>
+  </div>
+
+  <div class="stack-scroll">
+    <div id="stack" class="card-stack"></div>
+  </div>
+
+  <div class="play-area">
+    <div id="current-zone" class="current-zone"></div>
+
+    <div id="buttons" class="guess-buttons">
+      <button class="guess-btn guess-btn--red" data-guess="red">Red</button>
+      <button class="guess-btn guess-btn--black" data-guess="black">Black</button>
+      <button class="guess-btn guess-btn--purple" data-guess="purple">PURPLE!</button>
+    </div>
+
+    <div id="gameover" class="gameover-panel" hidden>
+      <p class="gameover-panel__title">Game Over</p>
+      <button class="guess-btn guess-btn--purple" id="restart-btn">Play Again</button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('games_pages.static', filename='js/purple.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "games/base.html" %}
+{% block title %}Horse Race — Games{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('games_pages.static', filename='css/pages/race.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div id="race-game">
+
+  <section id="setup-screen">
+    <div class="race-header">
+      <h1 class="race-title">Horse Race</h1>
+      <p class="race-subtitle">Add up to 10 horses, give them names and colors, then race!</p>
+    </div>
+
+    <div id="horse-list" class="horse-list"></div>
+
+    <div class="setup-footer">
+      <button id="add-horse-btn" class="btn btn-primary">+ Add Horse</button>
+      <button id="start-race-btn" class="btn btn-accent" disabled>Start Race</button>
+    </div>
+  </section>
+
+  <section id="race-screen" hidden>
+    <div class="race-header">
+      <h1 class="race-title">Horse Race</h1>
+    </div>
+
+    <div id="track-container" class="track-container"></div>
+
+    <div id="race-result" class="race-result" hidden>
+      <div class="winner-banner">
+        <span class="winner-trophy">🏆</span>
+        <span id="winner-text" class="winner-text"></span>
+      </div>
+      <div class="result-actions">
+        <button id="race-again-btn" class="btn btn-accent">Race Again</button>
+        <button id="edit-horses-btn" class="btn btn-primary">Edit Horses</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('games_pages.static', filename='js/race.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,51 @@
+/* ── Buttons ─────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  font-family: var(--font-base);
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn:hover {
+  opacity: 0.88;
+  box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-accent {
+  background-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.btn--sm {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.btn--lg {
+  padding: 0.85rem 2rem;
+  font-size: 1.05rem;
+  border-radius: var(--radius-lg);
+}

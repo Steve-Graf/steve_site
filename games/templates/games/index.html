@@ -1,0 +1,32 @@
+{% extends "games/base.html" %}
+{% block title %}Games{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('games_pages.static', filename='css/pages/index.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-header__title">Games</h1>
+  <p class="page-header__subtitle">Pick a game and play.</p>
+</div>
+
+{% if games %}
+  <div class="games-grid">
+    {% for game in games %}
+      <a href="{{ url_for('games_pages.' + game.id) }}" class="game-card">
+        <div class="game-card__icon{% if game.flip_icon %} game-card__icon--flip{% endif %}">{{ game.icon }}</div>
+        <div class="game-card__body">
+          <h2 class="game-card__title">{{ game.title }}</h2>
+          <p class="game-card__description">{{ game.description }}</p>
+        </div>
+        <span class="game-card__arrow">→</span>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state__icon">🎮</div>
+    <p class="empty-state__text">No games yet — check back soon!</p>
+  </div>
+{% endif %}
+{% endblock %}

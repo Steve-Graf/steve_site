@@ -1,0 +1,259 @@
+/* ── Header ───────────────────────────────────────── */
+
+.race-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.race-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.race-subtitle {
+  color: var(--color-muted);
+  margin-top: 0.3rem;
+  font-size: 1rem;
+}
+
+/* ── Setup ────────────────────────────────────────── */
+
+.horse-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.horse-row {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.color-swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 22px);
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.swatch:hover {
+  transform: scale(1.25);
+}
+
+.swatch--active {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-primary);
+  transform: scale(1.15);
+}
+
+.horse-name-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-base);
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.horse-name-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.remove-btn {
+  flex-shrink: 0;
+  background: #fee2e2;
+  color: #991b1b;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.3rem 0.55rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: var(--font-base);
+  transition: opacity 0.15s;
+}
+
+.remove-btn:hover {
+  opacity: 0.75;
+}
+
+.setup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+/* ── Track ────────────────────────────────────────── */
+
+.track-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #1b2d47;
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.lane {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 48px;
+}
+
+.lane__label {
+  width: 100px;
+  min-width: 100px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: right;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lane__track {
+  flex: 1;
+  height: 38px;
+  background: #2a3f5f;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* Checkerboard finish line */
+.lane__track::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  border-radius: 0 8px 8px 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    #fff 0px, #fff 6px,
+    #222 6px, #222 12px
+  );
+}
+
+.lane__finish {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.horse-token {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  will-change: transform;
+  z-index: 1;
+  transition: box-shadow 0.2s;
+}
+
+.horse-token--winner {
+  animation: winner-glow 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes winner-glow {
+  from { box-shadow: 0 0 0 2px #ffd700, 0 0 6px 2px rgba(255, 215, 0, 0.4); }
+  to   { box-shadow: 0 0 0 3px #ffd700, 0 0 14px 5px rgba(255, 215, 0, 0.75); }
+}
+
+/* ── Result ───────────────────────────────────────── */
+
+.race-result {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.winner-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.winner-trophy {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.winner-text {
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ── Mobile ───────────────────────────────────────── */
+
+@media (max-width: 500px) {
+  .race-title {
+    font-size: 1.7rem;
+  }
+
+  .lane__label {
+    width: 72px;
+    min-width: 72px;
+    font-size: 0.75rem;
+  }
+
+  .color-swatches {
+    grid-template-columns: repeat(5, 18px);
+    gap: 3px;
+  }
+
+  .swatch {
+    width: 18px;
+    height: 18px;
+  }
+
+  .track-container {
+    padding: 0.75rem;
+  }
+}

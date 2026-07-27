@@ -1,0 +1,140 @@
+/* ── Page header ─────────────────────────────────── */
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+
+.page-header__subtitle {
+  margin-top: 0.4rem;
+  font-size: 1rem;
+  color: var(--color-muted);
+}
+
+/* ── Games grid ──────────────────────────────────── */
+
+.games-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Game card ───────────────────────────────────── */
+
+.game-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--color-border);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.game-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.game-card:active {
+  transform: scale(0.99);
+}
+
+.game-card__icon--flip {
+  transform: scaleX(-1);
+}
+
+.game-card__icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
+.game-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-card__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.2rem;
+}
+
+.game-card__description {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.game-card__arrow {
+  font-size: 1.25rem;
+  color: var(--color-muted);
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.game-card:hover .game-card__arrow {
+  transform: translateX(4px);
+  color: var(--color-primary);
+}
+
+/* ── Empty state ─────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-state__icon {
+  font-size: 3rem;
+}
+
+.empty-state__text {
+  font-size: 1rem;
+  color: var(--color-muted);
+}
+
+/* ── Mobile ──────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .game-card {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .game-card__icon {
+    width: 48px;
+    height: 48px;
+    font-size: 2rem;
+  }
+
+  .page-header__title {
+    font-size: 1.6rem;
+  }
+}

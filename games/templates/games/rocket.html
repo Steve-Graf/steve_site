@@ -1,0 +1,40 @@
+{% extends "games/base.html" %}
+{% block title %}Rocket — Games{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('games_pages.static', filename='css/pages/rocket.css') }}" />
+{% endblock %}
+
+{% block content %}
+<script>document.body.classList.add('rocket-page');</script>
+
+<div class="rocket-game">
+
+  <div class="rocket-header">
+    <a href="{{ url_for('games_pages.index') }}" class="rocket-back">← Games</a>
+    <h1 class="rocket-title">🚀 Rocket</h1>
+    <div class="rocket-pb">Best: <span id="rocket-pb-val">—</span></div>
+  </div>
+
+  <div class="rocket-canvas-wrap">
+    <canvas id="rocket-canvas"></canvas>
+    <div class="rocket-overlay">
+      <div id="rocket-mult" class="rocket-multiplier">1.00x</div>
+      <div id="rocket-status" class="rocket-status"></div>
+    </div>
+    <div id="crash-flash" class="crash-flash"></div>
+    <div id="bail-flash" class="bail-flash"></div>
+    <div id="new-best-badge" class="new-best-badge" hidden>🏆 New Best!</div>
+  </div>
+
+  <div class="rocket-controls">
+    <button id="bail-btn" class="bail-btn" disabled>Launching…</button>
+  </div>
+
+  <div id="rocket-history" class="rocket-history"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('games_pages.static', filename='js/rocket.js') }}"></script>
+{% endblock %}

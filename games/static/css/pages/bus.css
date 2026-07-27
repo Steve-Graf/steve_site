@@ -1,0 +1,263 @@
+/* ── Page theme ──────────────────────────────────── */
+
+body {
+  background: #0d2d1a;
+  min-height: 100vh;
+  color: #e8f5e0;
+}
+
+.bus-game {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ── Title ───────────────────────────────────────── */
+
+.bus-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #f5c842;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+/* ── Rounds won ──────────────────────────────────── */
+
+.bus-wins {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.bus-wins__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 0.1rem;
+}
+
+.bus-wins__number {
+  font-size: 5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+}
+
+@keyframes pop {
+  0%   { transform: scale(1);    color: #ffffff; }
+  40%  { transform: scale(1.35); color: #f5c842; }
+  100% { transform: scale(1);    color: #ffffff; }
+}
+
+.bus-wins__number.pop {
+  animation: pop 0.55s ease-out;
+}
+
+/* ── Progress dots ───────────────────────────────── */
+
+.bus-progress {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.progress-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  transition: background 0.25s, box-shadow 0.25s;
+}
+
+.progress-dot--done {
+  background: #4ade80;
+}
+
+.progress-dot--active {
+  background: #f5c842;
+  box-shadow: 0 0 10px rgba(245, 200, 66, 0.6);
+}
+
+/* ── Hand strip ──────────────────────────────────── */
+
+.hand-scroll {
+  min-height: 126px;
+  overflow-x: auto;
+  padding: 6px 4px 10px;
+  margin-bottom: 1.5rem;
+}
+
+.hand-strip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.card-sprite {
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.hand-empty-hint {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.25);
+  padding-left: 2px;
+  line-height: 110px;
+}
+
+/* ── Play area ───────────────────────────────────── */
+
+.play-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.question-label {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #f5c842;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.current-zone {
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+
+.bus-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.bus-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-base);
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #fff;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.bus-btn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.bus-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.bus-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.bus-btn svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.bus-btn--icon {
+  padding: 0.75rem 1.1rem;
+}
+
+.bus-btn--red      { background-color: #c0392b; }
+.bus-btn--black    { background-color: #1e2a3a; border: 1px solid rgba(255,255,255,0.2); }
+.bus-btn--higher   { background-color: #1d6a9e; }
+.bus-btn--same     { background-color: #475569; }
+.bus-btn--lower    { background-color: #c06515; }
+.bus-btn--in       { background-color: #0e6b4a; }
+.bus-btn--edge     { background-color: #6d3aaa; }
+.bus-btn--out      { background-color: #8b1a1a; }
+.bus-btn--clubs    { background-color: #1e2a3a; border: 1px solid rgba(255,255,255,0.2); }
+.bus-btn--diamonds { background-color: #c0392b; }
+.bus-btn--hearts   { background-color: #c0392b; }
+.bus-btn--spades   { background-color: #1e2a3a; border: 1px solid rgba(255,255,255,0.2); }
+.bus-btn--restart  { background-color: #b8860b; }
+
+/* ── Game over ───────────────────────────────────── */
+
+.gameover-panel[hidden] { display: none; }
+
+.gameover-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: center;
+  padding: 2rem 2.5rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+}
+
+.gameover-panel__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f5c842;
+}
+
+.gameover-panel__body {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.gameover-panel__body strong {
+  color: #ffffff;
+}
+
+/* ── Mobile ──────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .bus-title {
+    font-size: 2rem;
+  }
+
+  .bus-wins__number {
+    font-size: 4rem;
+  }
+
+  .bus-buttons {
+    gap: 0.5rem;
+  }
+
+  .bus-btn {
+    padding: 0.65rem 1rem;
+    font-size: 1rem;
+  }
+
+  .bus-btn--icon {
+    padding: 0.65rem 0.8rem;
+  }
+
+  .gameover-panel {
+    padding: 0.75rem 1.25rem;
+  }
+}

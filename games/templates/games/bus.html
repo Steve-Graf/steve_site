@@ -1,0 +1,46 @@
+{% extends "games/base.html" %}
+{% block title %}Ride the Bus — Games{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('games_pages.static', filename='css/pages/bus.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="bus-game"
+     data-sprite="{{ url_for('games_pages.static', filename='img/cards_spritesheet.png') }}">
+
+  <h1 class="bus-title">Ride the Bus</h1>
+
+  <div class="bus-wins">
+    <div class="bus-wins__label">Rounds Won</div>
+    <div id="rounds" class="bus-wins__number">0</div>
+  </div>
+
+  <div class="bus-progress">
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+  </div>
+
+  <div class="hand-scroll">
+    <div id="hand" class="hand-strip"></div>
+  </div>
+
+  <div id="play-area" class="play-area">
+    <p id="question-label" class="question-label"></p>
+    <div id="current-zone" class="current-zone"></div>
+    <div id="buttons" class="bus-buttons"></div>
+  </div>
+
+  <div id="gameover" class="gameover-panel" hidden>
+    <p class="gameover-panel__title">Deck Empty!</p>
+    <p class="gameover-panel__body">You won <strong id="final-rounds">0</strong> round(s).</p>
+    <button class="bus-btn bus-btn--restart" id="restart-btn">Play Again</button>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('games_pages.static', filename='js/bus.js') }}"></script>
+{% endblock %}

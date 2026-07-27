@@ -1,9 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 from flask_cors import CORS
 from odds.odds_routes import odds_bp
 from bingo import init_bingo
 from bingo.config import BingoConfig
 from golf import init_golf
+from games import init_games
+from tts import init_tts
 
 app = Flask(__name__, static_folder='client/dist/assets', template_folder='client/dist')
 CORS(app, origins=['http://localhost:5173', 'https://stevegraf.com'])
@@ -13,6 +15,12 @@ app.config.from_object(BingoConfig)
 app.register_blueprint(odds_bp)
 init_bingo(app)
 init_golf(app)
+init_games(app)
+init_tts(app)
+
+@app.route('/favicon.svg')
+def favicon():
+    return send_from_directory('static/favicons', 'option1-monogram.svg', mimetype='image/svg+xml')
 
 @app.route('/')
 def home():

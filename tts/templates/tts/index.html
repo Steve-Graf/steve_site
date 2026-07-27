@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Chat — bazooka_steve</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #0e0e10;
+            color: #efeff1;
+            font-family: monospace;
+            font-size: 15px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 18px;
+            color: #9147ff;
+            margin-bottom: 16px;
+        }
+
+        #controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        button {
+            background: #9147ff;
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        button:hover { background: #772ce8; }
+        button:disabled { background: #444; cursor: default; }
+
+        #status {
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            background: #333;
+            color: #aaa;
+        }
+
+        #status.connected { background: #1a3a1a; color: #4caf50; }
+        #status.error     { background: #3a1a1a; color: #f44336; }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        input[type="range"] { width: 90px; accent-color: #9147ff; }
+
+        #voiceSelect {
+            background: #1f1f23;
+            color: #efeff1;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-family: monospace;
+            font-size: 13px;
+            max-width: 220px;
+        }
+
+        #messages {
+            border-top: 1px solid #333;
+            padding-top: 12px;
+            max-height: calc(100vh - 130px);
+            overflow-y: auto;
+        }
+
+        .msg {
+            padding: 5px 0;
+            border-bottom: 1px solid #1a1a1d;
+            line-height: 1.4;
+        }
+
+        .msg .user { color: #9147ff; font-weight: bold; }
+        .msg .text { color: #efeff1; }
+        .msg.speaking { background: #1a1630; border-radius: 3px; padding: 5px 6px; }
+    </style>
+</head>
+<body>
+    <h1>TTS Chat — bazooka_steve</h1>
+
+    <div id="controls">
+        <button id="connectBtn">Connect</button>
+        <span id="status">Disconnected</span>
+
+        <div class="slider-group">
+            <label for="rateSlider">Speed</label>
+            <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1.1">
+            <span id="rateVal">1.1</span>
+        </div>
+
+        <div class="slider-group">
+            <label for="volSlider">Volume</label>
+            <input type="range" id="volSlider" min="0" max="1" step="0.05" value="1">
+            <span id="volVal">1.0</span>
+        </div>
+
+        <select id="voiceSelect"><option>Loading voices…</option></select>
+
+        <button id="testBtn">Test TTS</button>
+        <button id="skipBtn">Skip</button>
+    </div>
+
+    <div id="messages"></div>
+
+    <script>
+        const CHANNEL = 'bazooka_steve';
+        const WS_URL  = 'wss://irc-ws.chat.twitch.tv:443';
+
+        let ws            = null;
+        let currentMsgEl  = null;
+
+        const connectBtn  = document.getElementById('connectBtn');
+        const statusEl    = document.getElementById('status');
+        const messagesEl  = document.getElementById('messages');
+        const rateSlider  = document.getElementById('rateSlider');
+        const rateVal     = document.getElementById('rateVal');
+        const volSlider   = document.getElementById('volSlider');
+        const volVal      = document.getElementById('volVal');
+        const testBtn     = document.getElementById('testBtn');
+        const skipBtn     = document.getElementById('skipBtn');
+        const voiceSelect = document.getElementById('voiceSelect');
+
+        let voices = [];
+
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            if (!voices.length) return;
+            const prev = voiceSelect.value;
+            voiceSelect.innerHTML = '';
+            voices.forEach((v, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = `${v.name} (${v.lang})`;
+                voiceSelect.appendChild(opt);
+            });
+            // restore selection or pick a sensible default
+            const prevIdx = voices.findIndex(v => v.name === prev);
+            voiceSelect.value = prevIdx >= 0 ? prevIdx : 0;
+        }
+
+        speechSynthesis.addEventListener('voiceschanged', loadVoices);
+        loadVoices();
+
+        rateSlider.addEventListener('input', () => rateVal.textContent = rateSlider.value);
+        volSlider.addEventListener('input', () => volVal.textContent = parseFloat(volSlider.value).toFixed(2));
+
+        testBtn.addEventListener('click', () => speak('Test. Chat TTS is working.', null));
+        skipBtn.addEventListener('click', () => {
+            speechSynthesis.cancel();
+            if (currentMsgEl) {
+                currentMsgEl.classList.remove('speaking');
+                currentMsgEl = null;
+            }
+        });
+
+        connectBtn.addEventListener('click', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
+            } else {
+                connect();
+            }
+        });
+
+        function setStatus(text, state) {
+            statusEl.textContent = text;
+            statusEl.className   = state || '';
+            connectBtn.textContent = (state === 'connected') ? 'Disconnect' : 'Connect';
+        }
+
+        function connect() {
+            setStatus('Connecting…');
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                ws.send('PASS SCHMOOPIIE');
+                ws.send('NICK justinfan' + Math.floor(Math.random() * 80000 + 1000));
+                ws.send('JOIN #' + CHANNEL);
+                setStatus('Connected', 'connected');
+            };
+
+            ws.onmessage = (event) => {
+                event.data.split('\r\n').forEach(parseLine);
+            };
+
+            ws.onclose = () => setStatus('Disconnected');
+            ws.onerror = () => setStatus('Connection error', 'error');
+        }
+
+        function parseLine(line) {
+            if (line.startsWith('PING')) {
+                ws.send('PONG :tmi.twitch.tv');
+                return;
+            }
+
+            // :nick!nick@nick.tmi.twitch.tv PRIVMSG #channel :message
+            const match = line.match(/^:(\w+)!\w+@\S+ PRIVMSG #\S+ :(.+)$/);
+            if (!match) return;
+
+            const user = match[1];
+            const text = match[2].trim();
+
+            addMessage(user, text);
+            speak(`${user} says ${text}`, user);
+        }
+
+        function addMessage(user, text) {
+            const el = document.createElement('div');
+            el.className = 'msg';
+            el.dataset.user = user;
+            el.innerHTML = `<span class="user">${escHtml(user)}</span>: <span class="text">${escHtml(text)}</span>`;
+            messagesEl.prepend(el);
+            while (messagesEl.children.length > 60) {
+                messagesEl.removeChild(messagesEl.lastChild);
+            }
+            return el;
+        }
+
+        function speak(text, user) {
+            const utt   = new SpeechSynthesisUtterance(text);
+            utt.rate    = parseFloat(rateSlider.value);
+            utt.volume  = parseFloat(volSlider.value);
+            if (voices[voiceSelect.value]) utt.voice = voices[voiceSelect.value];
+
+            utt.onstart = () => {
+                if (currentMsgEl) currentMsgEl.classList.remove('speaking');
+                // highlight the matching message row
+                if (user) {
+                    currentMsgEl = messagesEl.querySelector(`.msg[data-user="${user}"]`);
+                    if (currentMsgEl) currentMsgEl.classList.add('speaking');
+                }
+            };
+            utt.onend = utt.onerror = () => {
+                if (currentMsgEl) currentMsgEl.classList.remove('speaking');
+                currentMsgEl = null;
+            };
+
+            speechSynthesis.speak(utt);
+        }
+
+        function escHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+    </script>
+</body>
+</html>

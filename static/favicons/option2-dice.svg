@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Orange rounded square background -->
+  <rect width="32" height="32" rx="6" fill="#e05c2a"/>
+  <!-- White inset die face -->
+  <rect x="3" y="3" width="26" height="26" rx="5" fill="white" opacity="0.15"/>
+  <!-- Five-dot pattern (like a 5 on a die) -->
+  <!-- Top-left -->
+  <circle cx="10" cy="10" r="3" fill="white"/>
+  <!-- Top-right -->
+  <circle cx="22" cy="10" r="3" fill="white"/>
+  <!-- Center -->
+  <circle cx="16" cy="16" r="3" fill="white"/>
+  <!-- Bottom-left -->
+  <circle cx="10" cy="22" r="3" fill="white"/>
+  <!-- Bottom-right -->
+  <circle cx="22" cy="22" r="3" fill="white"/>
+</svg>

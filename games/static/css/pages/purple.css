@@ -1,0 +1,213 @@
+/* ── Page theme ──────────────────────────────────── */
+
+body {
+  background: #1a0a2e;
+  min-height: 100vh;
+  color: #e8d5ff;
+}
+
+.purple-game {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ── Title ───────────────────────────────────────── */
+
+.pg-title {
+  text-align: center;
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: #c084fc;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+/* ── Score ───────────────────────────────────────── */
+
+.pg-score {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.pg-score__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 0.1rem;
+}
+
+.pg-score__number {
+  font-size: 5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.pg-score__best {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.3rem;
+}
+
+/* ── Card stack ──────────────────────────────────── */
+
+.stack-scroll {
+  min-height: 126px;
+  overflow-x: auto;
+  padding: 6px 4px 10px;
+  margin-bottom: 1.75rem;
+}
+
+.card-stack {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.card-sprite {
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+/* Cards overlap: each shows ~32px of left edge */
+.card-stack .card-sprite {
+  margin-right: -48px;
+  position: relative;
+}
+
+.card-stack .card-sprite:last-child {
+  margin-right: 0;
+}
+
+.stack-empty-hint {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.25);
+  padding-left: 2px;
+  line-height: 110px;
+}
+
+/* ── Play area ───────────────────────────────────── */
+
+.play-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.current-zone {
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reveal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+
+.guess-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.guess-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.6rem;
+  font-family: var(--font-base);
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #fff;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.guess-btn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.guess-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.guess-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.guess-btn--red    { background-color: #c0392b; }
+.guess-btn--black  { background-color: #1a1a2e; border: 1px solid rgba(255,255,255,0.15); }
+.guess-btn--purple { background-color: #7b2d8b; letter-spacing: 1px; }
+
+/* ── Game over ───────────────────────────────────── */
+
+.gameover-panel[hidden] { display: none; }
+
+.gameover-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: center;
+  padding: 2rem 2.5rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+}
+
+.gameover-panel__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.gameover-panel__body {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.gameover-panel__body strong {
+  color: #ffffff;
+}
+
+/* ── Mobile ──────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .pg-title {
+    font-size: 2.25rem;
+  }
+
+  .pg-score__number {
+    font-size: 4rem;
+  }
+
+  .guess-buttons {
+    gap: 0.5rem;
+  }
+
+  .guess-btn {
+    padding: 0.65rem 1.1rem;
+    font-size: 1rem;
+  }
+
+  .gameover-panel {
+    padding: 0.75rem 1.25rem;
+  }
+}
