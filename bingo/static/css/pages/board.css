@@ -6,84 +6,50 @@
   gap: 1.75rem;
 }
 
-.board-page__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+/* ── Bingo frame (BINGO banner + grid) ───────────── */
+
+.bingo-frame {
+  border: 6px solid var(--color-ink);
+  /* border-radius: var(--radius-lg); */
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
-.board-page__header h1 {
-  font-family: CompactaBlackRegular, var(--font-base);
-  font-size: 1.75rem;
-  font-weight: 700;
+.bingo-frame__banner {
+  background: var(--color-ink);
+  text-align: center;
+  padding: 1.1rem 1rem 0.95rem;
+}
+
+.bingo-frame__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1.15;
+  color: var(--color-cream);
+  margin: 0;
   letter-spacing: 1px;
 }
 
-.board-page__meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* ── Share code row ──────────────────────────────── */
-
-.board-page__share {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.board-page__share-label {
-  font-size: 0.85rem;
-  color: var(--color-slate);
-}
-
-.board-page__share-code {
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: var(--color-dark-blue);
-  font-family: var(--font-base);
-}
-
-/* ── Bingo banner ────────────────────────────────── */
-
-.bingo-banner {
-  text-align: center;
-  padding: 1.25rem;
-  background: var(--color-dark-blue);
-  animation: slideIn 0.4s ease;
-}
-
-.bingo-banner__text {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--color-white);
-  letter-spacing: 0.05em;
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(-12px); }
-  to   { opacity: 1; transform: translateY(0); }
+.bingo-frame__banner .badge--bingo {
+  margin-top: 0.5rem;
+  background-color: var(--color-cream);
+  color: var(--color-ink);
 }
 
 /* ── Mobile ──────────────────────────────────────── */
 
 @media (max-width: 600px) {
   .bingo-grid {
-    gap: 0.25rem;
     width: 100%;
   }
 
   .tile {
-    border-radius: var(--radius-sm);
     padding: 0.25rem;
   }
 
   .tile__label {
-    font-size: clamp(0.5rem, 3vw, 0.8rem);
+    font-size: clamp(0.6rem, 3vw, 0.85rem);
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -97,7 +63,7 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(58, 46, 38, 0.45);
   z-index: 100;
 }
 
@@ -110,7 +76,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--color-white);
+  background: var(--color-card);
+  border-top: 2px dashed var(--color-border-dashed);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 0.75rem 1.5rem 2.5rem;
   z-index: 101;
@@ -129,21 +96,138 @@
 .tile-modal__handle {
   width: 40px;
   height: 4px;
-  background: #ccc;
-  border-radius: 2px;
+  background: var(--color-border-dashed);
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
 
 .tile-modal__label {
   font-size: 1.15rem;
-  font-weight: 600;
+  font-weight: 500;
   text-align: center;
-  color: var(--color-dark-blue);
-  line-height: 1.45;
+  color: var(--color-body-text);
+  line-height: 1.5;
   margin: 0;
+}
+
+.tile-modal__photos {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.filmstrip__hero {
+  width: 100%;
+  max-height: 40vh;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border-dashed);
+}
+
+.filmstrip__thumbs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  width: 100%;
+  justify-content: center;
+  padding: 0.15rem;
+}
+
+.filmstrip__thumbs[hidden] {
+  display: none;
+}
+
+.filmstrip__thumb {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--color-border-dashed);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 0;
+}
+
+.filmstrip__thumb--active {
+  border: 2px solid var(--color-ink);
+  opacity: 1;
+  box-shadow: var(--shadow-sm);
+}
+
+.filmstrip__delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: none;
+  color: var(--color-danger);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-pill);
+}
+
+.filmstrip__delete:hover {
+  background: var(--color-error-bg);
+}
+
+.filmstrip__delete svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tile-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 300px;
 }
 
 .tile-modal__btn {
   width: 100%;
+}
+
+.tile-modal__upload-status {
+  width: 100%;
   max-width: 300px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.tile-modal__upload-status--success {
+  color: var(--color-forest);
+}
+
+.tile-modal__upload-status--error {
+  color: var(--color-danger);
+}
+
+/* ── Tile photo indicator ────────────────────────── */
+
+.tile {
+  position: relative;
+}
+
+.tile__photo-badge {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  color: var(--color-card);
+  line-height: 1;
+}
+
+.tile__photo-badge svg {
+  display: block;
+  width: 15px;
+  height: 15px;
 }

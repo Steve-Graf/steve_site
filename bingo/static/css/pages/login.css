@@ -17,14 +17,15 @@
 }
 
 .login-card__title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--color-dark-blue);
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--color-ink);
 }
 
 .login-card__subtitle {
   font-size: 0.95rem;
-  color: var(--color-slate);
-  line-height: 1.5;
+  font-style: italic;
+  color: var(--color-muted-text);
+  line-height: 1.6;
   margin-bottom: 0.5rem;
 }

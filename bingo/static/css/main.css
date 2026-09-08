@@ -1,30 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-
-@font-face {
-  font-family: CompactaBlackRegular;
-  src: url("../fonts/CompactaBlackRegular.otf") format("opentype");
-}
-
 :root {
-  --color-dark-blue:  #344f6c;
-  --color-red:        #a75d50;
-  --color-slate:      #6b818c;
-  --color-peach:      #e4d7ca;
-  --color-off-white:  #eee0d3;
-  --color-white:      #ffffff;
-  --color-form-white: #f2f2f2;
+  --color-ink:          #6b1f2a;
+  --color-ink-shadow:   #3f1119;
+  --color-forest:       #2f4a3c;
+  --color-forest-shadow:#16241c;
+  --color-danger:       #8a2e20;
+  --color-danger-shadow:#4f1a12;
 
-  --radius-sm:  6px;
-  --radius-md:  12px;
-  --radius-lg:  20px;
+  --color-bg:           #f3e7d3;
+  --color-card:         #fbf4e7;
+  --color-border:       #d9c19a;
+  --color-border-dashed:#b99b6f;
 
-  --shadow-sm:  0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .08);
-  --shadow-md:  0 4px 12px rgba(0, 0, 0, .14);
-  --shadow-lg:  0 8px 24px rgba(0, 0, 0, .18);
+  --color-body-text:    #3a2e26;
+  --color-muted-text:   #7a6650;
+  --color-cream:        #f6ead8;
 
-  --font-base:  'Roboto', sans-serif;
+  --color-success-bg:   #dcead9;
+  --color-error-bg:     #f3d9d3;
 
-  --nav-height: 64px;
+  --radius-sm:  4px;
+  --radius-md:  6px;
+  --radius-lg:  10px;
+  --radius-pill: 999px;
+
+  --shadow-sm:  0 2px 6px rgba(58, 46, 38, .10);
+  --shadow-md:  0 8px 20px rgba(58, 46, 38, .14);
+  --shadow-card: 0 1px 2px rgba(58, 46, 38, .06), 0 6px 14px rgba(58, 46, 38, .10), 0 16px 28px rgba(58, 46, 38, .12);
+  --shadow-hero: 0 1px 2px rgba(58, 46, 38, .08), 0 8px 16px rgba(58, 46, 38, .10), 0 22px 40px rgba(58, 46, 38, .14);
+
+  --font-display: 'Abril Fatface', serif;
+  --font-body:  'Lora', serif;
+
+  --nav-height: 72px;
 }
 
 *, *::before, *::after {
@@ -39,10 +46,10 @@ html {
 }
 
 body {
-  font-family: var(--font-base);
-  background-color: var(--color-off-white);
-  color: #3D405B;
-  line-height: 1.6;
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-body-text);
+  line-height: 1.65;
   min-height: 100vh;
 }
 
@@ -56,6 +63,10 @@ img {
   max-width: 100%;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 /* ── Nav ─────────────────────────────────────────── */
 
 .nav {
@@ -67,16 +78,15 @@ img {
   justify-content: space-between;
   padding: 0 2rem;
   height: var(--nav-height);
-  background-color: var(--color-dark-blue);
-  box-shadow: var(--shadow-md);
+  background-color: var(--color-bg);
+  border-bottom: 1px dashed var(--color-border-dashed);
 }
 
 .nav__logo {
-  font-family: CompactaBlackRegular, var(--font-base);
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-white);
-  letter-spacing: 1px;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--color-ink);
+  letter-spacing: 0.01em;
 }
 
 .nav__actions {
@@ -96,13 +106,13 @@ img {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--color-peach);
+  border: 2px solid var(--color-forest);
 }
 
 .nav__name {
   font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-white);
+  font-style: italic;
+  color: var(--color-muted-text);
 }
 
 /* ── Flash messages ──────────────────────────────── */
@@ -120,13 +130,80 @@ img {
 }
 
 .flash--success {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: var(--color-success-bg);
+  color: var(--color-forest);
 }
 
 .flash--error {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: var(--color-error-bg);
+  color: var(--color-danger);
+}
+
+/* ── iOS install banner ──────────────────────────── */
+
+.ios-install-banner {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0.75rem 0.9rem;
+  background-color: var(--color-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.ios-install-banner__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.ios-install-banner__text {
+  flex: 1;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-body-text);
+  line-height: 1.4;
+}
+
+.ios-install-banner__share-icon {
+  display: inline-flex;
+  vertical-align: -0.35em;
+  color: var(--color-ink);
+}
+
+.ios-install-banner__share-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ios-install-banner__dismiss {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-text);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ios-install-banner__dismiss:hover {
+  background-color: var(--color-border);
 }
 
 /* ── Main layout ─────────────────────────────────── */

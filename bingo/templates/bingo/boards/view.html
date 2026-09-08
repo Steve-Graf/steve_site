@@ -6,75 +6,61 @@
 
 {% block content %}
 <div class="board-page">
-  <div class="board-page__header">
-    <h1>{{ game.title }}</h1>
-    <div class="board-page__meta">
-{% if player_board.has_bingo %}
-        <span class="badge badge--bingo">BINGO!</span>
-      {% endif %}
+  <div class="bingo-frame">
+    <div class="bingo-frame__banner">
+      <h1 class="bingo-frame__title">{{ game.title }}</h1>
+      <!-- <span id="bingo-banner" class="badge badge--bingo"{% if not player_board.has_bingo %} hidden{% endif %}>BINGO!</span> -->
     </div>
-  </div>
 
-  <div class="board-page__share">
-    <span class="board-page__share-label">Share code:</span>
-    <span class="board-page__share-code" id="share-code">{{ game.share_code }}</span>
-    <button class="btn btn-secondary btn--sm" id="copy-code-btn" type="button">Copy</button>
-  </div>
-
-  <div
-    class="bingo-grid"
-    style="--grid-size: {{ game.board_size }}"
-    id="bingo-grid"
-    data-board-id="{{ player_board.id }}"
-  >
-    {% for row_idx in range(game.board_size) %}
-      {% for col_idx in range(game.board_size) %}
-        {% set label = player_board.tile_layout[row_idx][col_idx] %}
-        {% set done = player_board.completion_state[row_idx][col_idx] %}
-        <button
-          class="tile{% if done %} tile--completed{% endif %}"
-          data-row="{{ row_idx }}"
-          data-col="{{ col_idx }}"
-          aria-pressed="{{ 'true' if done else 'false' }}"
-        >
-          <span class="tile__label">{{ label }}</span>
-        </button>
+    <div
+      class="bingo-grid"
+      style="--grid-size: {{ game.board_size }}"
+      id="bingo-grid"
+      data-game-id="{{ game.id }}"
+    >
+      {% for row in player_board.tiles %}
+        {% for tile in row %}
+          <button
+            class="tile{% if tile.completed %} tile--completed{% endif %}"
+            data-tile-id="{{ tile.id }}"
+            data-completed="{{ 'true' if tile.completed else 'false' }}"
+            data-photos='{{ tile.photos | tojson }}'
+            aria-pressed="{{ 'true' if tile.completed else 'false' }}"
+          >
+            <span class="tile__label">{{ tile.text }}</span>
+            {% if tile.photos %}
+              <span class="tile__photo-badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3 7.17 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.17L15 3H9Zm3 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+              </span>
+            {% endif %}
+          </button>
+        {% endfor %}
       {% endfor %}
-    {% endfor %}
+    </div>
   </div>
-
-  {% if player_board.has_bingo %}
-    <div class="bingo-banner card" id="bingo-banner">
-      <span class="bingo-banner__text">BINGO!</span>
-    </div>
-  {% else %}
-    <div class="bingo-banner card" id="bingo-banner" hidden>
-      <span class="bingo-banner__text">BINGO!</span>
-    </div>
-  {% endif %}
 </div>
 
 <div id="tile-modal-backdrop" class="tile-modal-backdrop"></div>
 <div id="tile-modal" class="tile-modal" role="dialog" aria-modal="true">
   <div class="tile-modal__handle"></div>
   <p id="tile-modal-label" class="tile-modal__label"></p>
-  <button id="tile-modal-toggle" class="btn btn-primary tile-modal__btn" type="button">Mark as Done</button>
+  <div id="tile-modal-photos" class="tile-modal__photos" hidden>
+    <img class="filmstrip__hero" alt="Tile photo" />
+    <div id="tile-modal-photo-thumbs" class="filmstrip__thumbs"></div>
+    <button id="tile-modal-photo-delete" class="filmstrip__delete" type="button">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v1H4v2h1v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9Zm2 5h2v9h-2V8Zm-4 0h2v9H7V8Zm8 0h2v9h-2V8Z"/></svg>
+      Remove photo
+    </button>
+  </div>
+  <div class="tile-modal__actions">
+    <button id="tile-modal-toggle" class="btn btn-primary tile-modal__btn" type="button">Mark as Done</button>
+    <button id="tile-modal-upload" class="btn btn-secondary tile-modal__btn" type="button">Upload Photo</button>
+  </div>
+  <p id="tile-modal-upload-status" class="tile-modal__upload-status" aria-live="polite" hidden></p>
+  <input id="tile-photo-input" type="file" accept="image/*" hidden />
 </div>
 {% endblock %}
 
 {% block extra_js %}
   <script src="{{ url_for('bingo_pages.static', filename='js/board.js') }}"></script>
-  <script>
-    (function () {
-      const btn = document.getElementById("copy-code-btn");
-      const code = document.getElementById("share-code");
-      if (!btn || !code) return;
-      btn.addEventListener("click", function () {
-        navigator.clipboard.writeText(code.textContent.trim()).then(function () {
-          btn.textContent = "Copied!";
-          setTimeout(function () { btn.textContent = "Copy"; }, 2000);
-        });
-      });
-    })();
-  </script>
 {% endblock %}

@@ -5,9 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Social Bingo{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="{{ url_for('bingo_pages.manifest') }}" />
+  <link rel="apple-touch-icon" href="{{ url_for('bingo_pages.static', filename='icons/apple-touch-icon.png') }}" />
+  <meta name="theme-color" content="#6b1f2a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Bingo" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('bingo_pages.static', filename='css/main.css') }}" />
   <link rel="stylesheet" href="{{ url_for('bingo_pages.static', filename='css/components.css') }}" />
   {% block extra_css %}{% endblock %}
@@ -26,7 +32,7 @@
         <a href="{{ url_for('bingo_pages.create_board') }}" class="btn btn-primary btn--sm nav__new-board">New Board</a>
         <a href="{{ url_for('bingo_auth.logout') }}" class="btn btn-ghost btn--sm">Sign out</a>
       {% else %}
-        <a href="{{ url_for('bingo_pages.login') }}" class="btn btn-primary btn--sm">Sign in</a>
+        <a href="{{ url_for('bingo_auth.login') }}" class="btn btn-primary btn--sm">Sign in</a>
       {% endif %}
     </div>
   </nav>
@@ -41,10 +47,34 @@
     {% endif %}
   {% endwith %}
 
+
   <main class="main">
     {% block content %}{% endblock %}
   </main>
 
+  <div id="ios-install-banner" class="ios-install-banner" hidden>
+    <img class="ios-install-banner__icon" src="{{ url_for('bingo_pages.static', filename='icons/icon-192.png') }}" alt="" />
+    <p class="ios-install-banner__text">
+      Install Bingo: tap
+      <span class="ios-install-banner__share-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v12" />
+          <path d="M8 7l4-4 4 4" />
+          <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+        </svg>
+      </span>
+      then "Add to Home Screen"
+    </p>
+    <button type="button" class="ios-install-banner__dismiss" aria-label="Dismiss">&times;</button>
+  </div>
+
+
   {% block extra_js %}{% endblock %}
+  <script src="{{ url_for('bingo_pages.static', filename='js/ios-install-banner.js') }}"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("{{ url_for('bingo_pages.service_worker') }}", { scope: "{{ url_for('bingo_pages.index') }}" });
+    }
+  </script>
 </body>
 </html>
