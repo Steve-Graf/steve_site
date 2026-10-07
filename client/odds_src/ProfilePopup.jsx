@@ -1,43 +1,57 @@
 import './Odds.css';
 import {useContext, useState, useEffect} from "react";
 import AppContext from "./AppContext.jsx";
-import eyeIcon from './assets/icons/eye.svg';
-import eyeSlashIcon from './assets/icons/eye-slash.svg';
+import { authFetch } from './api.js';
+import { showAlert } from './alerts.js';
+import { subscribeToPush, unsubscribeFromPush } from './push.js';
+import Modal from './Modal.jsx';
+import { setShowAbbrevs, useShowAbbrevs } from './prefs.js';
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ProfilePopup({backgroundClick}) {
-    const {userData} = useContext(AppContext);
+    const {userData, refreshUserData} = useContext(AppContext);
+    const showAbbrevs = useShowAbbrevs();
     const [username, setUsername] = useState('');
-    const [userCode, setUserCode] = useState('');
-    const [isPasswordVisible, setPasswordVisible] = useState(false);
+    const [isPrivate, setIsPrivate] = useState(false);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [notificationsBusy, setNotificationsBusy] = useState(false);
 
     useEffect(() => {
-        if (userData?.name) {
-            if(userData.name != 'Unnamed'){
-                setUsername(userData.name);
-            }
+        if (userData?.displayName && userData.displayName !== 'Unnamed') {
+            setUsername(userData.displayName);
         }
-        if (userData?.playerCode) {
-            setUserCode(userData.playerCode);
-        }
+        setIsPrivate(!!userData?.isPrivate);
+        setNotificationsEnabled(!!userData?.hasPushSubscription);
     }, [userData]);
 
-    function userCodeError(){
-        let userCodeInputElement = document.getElementById('usercode-input');
-        userCodeInputElement.style.border = '1px solid red';
+    async function toggleNotifications(enabled){
+        setNotificationsEnabled(enabled);
+        setNotificationsBusy(true);
+        try {
+            if (enabled) {
+                await subscribeToPush();
+                showAlert("Notifications enabled.");
+            } else {
+                await unsubscribeFromPush();
+                showAlert("Notifications disabled.");
+            }
+            if (refreshUserData) {
+                await refreshUserData();
+            }
+        } catch (e) {
+            setNotificationsEnabled(!enabled);
+            showAlert(e.message || "Couldn't update notification settings.", "warning");
+        } finally {
+            setNotificationsBusy(false);
+        }
     }
 
-    async function updateUserCode(){
-        if(userCode.length != 4){
-            userCodeError();
-            return;
-        }
-
+    async function updateProfile(){
         const postData = {
             "username": username,
-            "playerCode": userCode
+            "isPrivate": isPrivate
         };
-        const response = await fetch(API_URL+'update-username', {
+        const response = await authFetch(API_URL+'update-profile', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -48,83 +62,70 @@ export default function ProfilePopup({backgroundClick}) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        if(data.status == 'failed'){
-            userCodeError();
-        }else{
-            const currentUserCode = localStorage.getItem('userCode', null);
-            localStorage.setItem('userCode', userCode);
-            if(currentUserCode != userCode || userData.name != username){
-                window.location.reload();
-            }else{
-                backgroundClick();
+        if(data.status == 'success'){
+            if(refreshUserData){
+                await refreshUserData();
             }
+            showAlert("Profile updated.");
+            backgroundClick();
         }
-        console.log(data);
-    }
-
-    function toggleCodeVisibility(){
-        setPasswordVisible(!isPasswordVisible)
-        var x = document.getElementById("usercode-input");
-        if (x.type === "password") {
-            x.style.fontSize = '16px';
-        } else {
-            x.style.fontSize = '32px';
-        }
-    }
-
-    function formatUserCode(){
-        let userCodeInputElement = document.getElementById('usercode-input');
-        userCodeInputElement.style.border = '0';
-        let userCode = userCodeInputElement.value;
-        if(userCode.length > 4){
-            userCode = userCode.slice(0, 4);
-        }
-        setUserCode(userCode);
-        return userCode;
     }
 
     return (
-        <div className="popup-wrapper">
-            <div className="popup-background" onClick={backgroundClick}></div>
-            <div className="popup-content">
-                <div className="popup-title">Profile</div>
-                <div className="popup-description">Use these input fields to update your username or change your user code. Your user code is the equivalent to a password, so be careful sharing it. Understand that your username will be visible to anyone accessing the leaderboards.</div>
-                <input
-                    id="username-input"
-                    name="username-input"
-                    className="input-field"
-                    type="text"
-                    placeholder="Username"
-                    value={username ?? ''}
-                    onChange={e => setUsername(e.target.value)}
-                    autoComplete='off'
-                />
-                <div style={{position:'relative'}}>
+        <Modal onClose={backgroundClick}>
+            <div className="popup-title">Profile</div>
+            {userData?.photoURL && (
+                <img className="profile-avatar" src={userData.photoURL} alt="" referrerPolicy="no-referrer" />
+            )}
+            <div className="popup-description">Signed in as {userData?.email}. Your username is what shows up on the leaderboards.</div>
+            <input
+                id="username-input"
+                name="username-input"
+                className="input-field"
+                type="text"
+                placeholder="Username"
+                value={username ?? ''}
+                onChange={e => setUsername(e.target.value)}
+                autoComplete='off'
+            />
+            <div className="private-toggle-row">
+                <label className="toggle-switch">
                     <input
-                        id="usercode-input"
-                        name="usercode-input"
-                        className="input-field password-field"
-                        type={isPasswordVisible ? 'text' : 'password'}
-                        value={userCode ?? ''}
-                        onChange={formatUserCode}
+                        type="checkbox"
+                        checked={isPrivate}
+                        onChange={e => setIsPrivate(e.target.checked)}
                     />
-                    <div className="visibility-toggle-wrapper" onClick={toggleCodeVisibility}>
-                        <img
-                            className="visibility-toggle-icon"
-                            id="eye-icon"
-                            src={eyeIcon}
-                            style={{ display: isPasswordVisible ? "block" : "none" }}
-                        />
-                        <img
-                            className="visibility-toggle-icon"
-                            id="eye-slash-icon"
-                            src={eyeSlashIcon}
-                            style={{ display: isPasswordVisible ? "none" : "block" }}
-                        />
-                    </div>
-                </div>
-                <div className="popup-button" onClick={() => updateUserCode()}>Update profile</div>
+                    <span className="toggle-switch-slider"></span>
+                </label>
+                <div className="private-toggle-label">Private (hide me from leaderboards)</div>
             </div>
-        </div>
+            <div className="private-toggle-row">
+                <label className="toggle-switch">
+                    <input
+                        type="checkbox"
+                        checked={notificationsEnabled}
+                        disabled={notificationsBusy}
+                        onChange={e => toggleNotifications(e.target.checked)}
+                    />
+                    <span className="toggle-switch-slider"></span>
+                </label>
+                <div className="private-toggle-label">Enable notifications (new week, Sunday reminders)</div>
+            </div>
+            {/* a display preference kept on this device; takes effect right away, no need to press Update profile */}
+            <div className="private-toggle-row">
+                <label className="toggle-switch">
+                    <input
+                        type="checkbox"
+                        id="show-abbrevs-toggle"
+                        checked={showAbbrevs}
+                        onChange={e => setShowAbbrevs(e.target.checked)}
+                    />
+                    <span className="toggle-switch-slider"></span>
+                </label>
+                <div className="private-toggle-label">Show team abbreviations under the logos</div>
+            </div>
+            <div className="popup-button" onClick={() => updateProfile()}>Update profile</div>
+            <a className="popup-button popup-button-secondary" href={API_URL+'auth/logout'}>Sign out</a>
+        </Modal>
     );
 }

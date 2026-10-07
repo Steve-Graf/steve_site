@@ -2,6 +2,7 @@ import './Odds.css';
 import TeamColumn from './TeamColumn.jsx';
 import OddsColumn from './OddsColumn.jsx';
 import ScoreColumn from './ScoreColumn.jsx';
+import PopularityColumn from './PopularityColumn.jsx';
 
 function formatSignedNumber(number, reciprocal){
     if(reciprocal){
@@ -14,7 +15,7 @@ function formatSignedNumber(number, reciprocal){
     }
 }
 
-export default function GameRow({game, selectedTeam}) {
+export default function GameRow({game, selectedTeam, isFirstUpcomingGame}) {
     const awaySpread = formatSignedNumber(game.gameSpread, game.gameSpreadTeam != game.awayTeam);
     const homeSpread = formatSignedNumber(game.gameSpread, game.gameSpreadTeam != game.homeTeam);
     const currentTime = new Date();
@@ -37,6 +38,19 @@ export default function GameRow({game, selectedTeam}) {
                 canClick={currentTime < gameTimeLocal}
                 selectedTeam={selectedTeam}
                 gameDate={game.gameTime}
+                isFirstUpcomingGame={isFirstUpcomingGame}
+                homeScore={game.homeScore}
+                awayScore={game.awayScore}
+                gameSpread={game.gameSpread}
+                gameSpreadTeam={game.gameSpreadTeam}
+            />
+
+            <PopularityColumn
+                gameId={game.gameId}
+                awayTeam={game.awayTeam}
+                homeTeam={game.homeTeam}
+                awayPickCount={game.awayPickCount}
+                homePickCount={game.homePickCount}
             />
 
             {/* <OddsColumn
@@ -45,11 +59,12 @@ export default function GameRow({game, selectedTeam}) {
                 canClick={false}
             /> */}
 
+            {/* hidden for now — not interactive yet, may revisit later
             <OddsColumn
                 label="O/U"
                 values={[`O ${game.ouPoints}`, `U ${game.ouPoints}`]}
                 canClick={false}
-            />
+            /> */}
         </div>
     );
 }

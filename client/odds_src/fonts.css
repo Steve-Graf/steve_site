@@ -31,19 +31,46 @@
 @font-face {
     font-family: NFL-Browns;
     src: url("assets/fonts/nfl-browns-2015.ttf") format("opentype");
+    font-display: swap;
 }
 
 @font-face {
     font-family: Arimo-Regular;
-    src: url("assets/fonts/Arimo-Regular.ttf") format("opentype");
+    src: url("assets/fonts/Arimo-Regular.woff2") format("woff2");
+    font-display: swap;
 }
 
 @font-face {
-    font-family: Roboto-Regular;
-    src: url("assets/fonts/Roboto-Regular.ttf") format("opentype");
+    font-family: Arimo-Bold;
+    src: url("assets/fonts/Arimo-Bold.woff2") format("woff2");
+    font-display: swap;
+}
+
+/* new board: Barlow Condensed for abbreviations/scores/spreads/times, Barlow for small labels (SIL OFL, latin subset) */
+@font-face {
+    font-family: "Barlow Condensed";
+    src: url("assets/fonts/BarlowCondensed-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-display: swap;
 }
 
 @font-face {
-    font-family: Roboto-Bold;
-    src: url("assets/fonts/Roboto-Bold.ttf") format("opentype");
+    font-family: "Barlow Condensed";
+    src: url("assets/fonts/BarlowCondensed-ExtraBold.woff2") format("woff2");
+    font-weight: 800;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Barlow";
+    src: url("assets/fonts/Barlow-SemiBold.woff2") format("woff2");
+    font-weight: 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Barlow";
+    src: url("assets/fonts/Barlow-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-display: swap;
 }

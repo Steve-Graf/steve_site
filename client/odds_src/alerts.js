@@ -1,11 +1,11 @@
 const ALERT_DURATION = 1000;
 
-export function showAlert(message) {
+export function showAlert(message, type = "success") {
     const wrapper = document.getElementById("alerts-wrapper");
     if (!wrapper) return;
 
     const alert = document.createElement("div");
-    alert.className = "alert-notification";
+    alert.className = `alert-notification alert-notification-${type}`;
     // alert.textContent = message;
 
     // click to dismiss early
