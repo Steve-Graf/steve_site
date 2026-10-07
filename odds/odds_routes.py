@@ -1,280 +1,431 @@
-from flask import Blueprint, jsonify, request
-import requests
-import os
-from pymongo import MongoClient
-from pymongo.errors import DuplicateKeyError
-from datetime import datetime, timezone, timedelta
-from dateutil.parser import isoparse
-from bson import ObjectId
-import json
+import time
 from collections import Counter
-from functools import wraps
+from datetime import datetime, timezone, timedelta
+
+from flask import Blueprint, g, jsonify, request, session
+from google.cloud import firestore
+
+from bingo.extensions import get_db
+
+from .auth import require_auth
+from .live_state import derive_view, game_is_final, game_key, read_live_state
+from .schedule import get_nfl_week
+from .survivor_routes import _current_week_number, _games_by_id_for_survivors, _still_undefeated_users, _week_bounds
 
 odds_bp = Blueprint('odds', __name__)
 
-try:
-    client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=2000)
-    db = client["mydb"]
-    users = db["users"]
-    users.create_index("playerCode", unique=True)
-    games = db["games"]
-    games.create_index("gameId", unique=True)
-    mongo_available = True
-except Exception:
-    db = users = games = None
-    mongo_available = False
-    print("MongoDB unavailable — /api/odds/ routes disabled")
+# Schedule, spreads and pick counts barely change, and live scores no longer live in
+# Firestore at all (the worker publishes them to a local file), so the board only needs
+# to re-read the week's docs every few minutes. Pick counts are kept current by writing
+# through to this cache on every pick. Assumes a single gunicorn worker (-w 1).
+WEEK_CACHE_TTL_SECONDS = 300
+_week_cache = {'key': None, 'fetched_at': 0.0, 'games': {}}
 
-def require_mongo(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if not mongo_available:
-            return jsonify({"error": "odds service unavailable"}), 503
-        return f(*args, **kwargs)
-    return wrapper
 
-@odds_bp.route('/api/odds/scores', methods=['POST'])
-def get_scores():
-    data = request.json
-    game_list = data.get("games", [])
-    for game in game_list:
-        game = update_game_score(game)
-    return jsonify({"updatedGames": game_list})
+def _current_week_games(db):
+    """{gameId: doc dict} for the current NFL week."""
+    week = get_nfl_week(target=datetime.now(timezone.utc))
+    if week is None:
+        return {}
+    start = datetime.fromisoformat(week["startDate"].replace("Z", "+00:00")) - timedelta(hours=1)
+    end = datetime.fromisoformat(week["endDate"].replace("Z", "+00:00")) + timedelta(hours=1)
+    key = (start, end)
+    if _week_cache['key'] != key or time.monotonic() - _week_cache['fetched_at'] > WEEK_CACHE_TTL_SECONDS:
+        docs = db.collection('odds_games').where('gameTime', '>=', start).where('gameTime', '<=', end).stream()
+        _week_cache.update(key=key, fetched_at=time.monotonic(), games={doc.id: doc.to_dict() for doc in docs})
+    return _week_cache['games']
 
-def update_game_score(game):
-    if not isinstance(game['gameTime'], datetime):
-        dt = datetime.strptime(game['gameTime'], "%a, %d %b %Y %H:%M:%S %Z")
-    else:
-        dt = game['gameTime']
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    yyyymmdd = dt.astimezone().strftime("%Y%m%d")
-    url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates={yyyymmdd}"
 
-    try:
-        response = requests.get(url)
-        data = response.json()
-        for event in data['events']:
-            for team in event['competitions'][0]['competitors']:
-                if team['team']['displayName'] == game['homeTeam'] and team['homeAway'] == 'home':
-                    game['homeScore'] = team['score']
-                elif team['team']['displayName'] == game['awayTeam'] and team['homeAway'] == 'away':
-                    game['awayScore'] = team['score']
-    except Exception:
-        print("Could not find score for game")
-        game['homeScore'] = '--'
-        game['awayScore'] = '--'
-    return game
+def _live_context():
+    """(per-game rows from the live-state file, seconds since the worker last refreshed it, now)."""
+    live = read_live_state()
+    entries = (live or {}).get('games', {})
+    updated_at = (live or {}).get('updatedAtTs')
+    live_age = time.time() - updated_at if updated_at else None
+    return entries, live_age, datetime.now(timezone.utc)
 
-def serialize_mongo(doc):
-    doc = dict(doc)
-    for k, v in doc.items():
-        if isinstance(v, ObjectId):
-            doc[k] = str(v)
-    return doc
 
-def get_nfl_week(target):
-    schedule_path = os.path.join(os.path.dirname(__file__), "nfl_schedule.json")
-    with open(schedule_path) as f:
-        weeks = json.load(f)
+def _game_view(game, context=None):
+    entries, live_age, now = context or _live_context()
+    entry = entries.get(game_key(game.get('homeTeam'), game.get('awayTeam')))
+    return derive_view(game, entry, live_age, now)
 
-    def parse_iso_z(dt_str):
-        return datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
-
-    current_day = datetime.today().weekday()
-    matching_week = None
-
-    for i, week in enumerate(weeks):
-        start = parse_iso_z(week["startDate"])
-        end = parse_iso_z(week["endDate"])
-
-        if start <= target <= end:
-            if current_day == 1:
-                matching_week = weeks[i + 1]
-            else:
-                matching_week = week
-            break
-    return matching_week
 
 @odds_bp.route('/api/odds/sport/<sport>')
-@require_mongo
 def odds(sport):
-    current_nfl_week = get_nfl_week(target=datetime.now(timezone.utc))
-    current_nfl_week_start = datetime.fromisoformat(current_nfl_week["startDate"].replace("Z", "+00:00")) - timedelta(hours=1)
-    current_nfl_week_end = datetime.fromisoformat(current_nfl_week["endDate"].replace("Z", "+00:00")) + timedelta(hours=1)
+    games = _current_week_games(get_db()).values()
+    context = _live_context()
+    board = [{**game, **_game_view(game, context)} for game in games]
+    return jsonify(sorted(board, key=lambda game: game["gameTime"]))
 
-    print("Querying from", current_nfl_week_start, "to", current_nfl_week_end)
 
-    games_cursor = games.find({
-        "gameTime": {"$gte": current_nfl_week_start, "$lte": current_nfl_week_end}
-    })
-
-    current_games = []
-    for g in games_cursor:
-        current_games.append(serialize_mongo(g))
-    games_sorted = sorted(current_games, key=lambda g: g["gameTime"])
-    for sorted_game in games_sorted:
-        sorted_game = update_game_score(sorted_game)
-    return jsonify(games_sorted)
-
-@odds_bp.route('/api/odds/game-state', methods=['POST'])
-@require_mongo
-def game_state():
-    data = request.json
-    game_state_val = 'none'
+def _spread_coverer(game):
+    """Which team covered the spread for this game — game['homeTeam'],
+    game['awayTeam'], or 'Push' — or None until the game is final (a score
+    mid-game isn't a result)."""
+    if not game_is_final(game):
+        return None
     try:
-        game_id = data["gameId"]
-        player_code = data["playerCode"]
-        game = games.find_one({"gameId": game_id})
-        if game:
-            pick_data = get_pick(game_id, player_code)
-            print(pick_data)
-            try:
-                away_points = float(game['awayScore'])
-                home_points = float(game['homeScore'])
-                points_spread = game['gameSpread']
-                if game['gameSpreadTeam'] == game['homeTeam']:
-                    home_points += points_spread
-                elif game['gameSpreadTeam'] == game['awayTeam']:
-                    away_points += points_spread
-                spread_coverer = 'Push'
-                if home_points > away_points:
-                    spread_coverer = game['homeTeam']
-                elif away_points > home_points:
-                    spread_coverer = game['awayTeam']
-                if pick_data.get('selectedTeam') == spread_coverer:
-                    game_state_val = 'win'
-                else:
-                    game_state_val = 'lose'
-            except Exception as e:
-                print(f'Could not find data for game: {e}')
-    except Exception:
-        print('Could not find game')
-    return jsonify({"game_state": game_state_val})
+        away_points = float(game['awayScore'])
+        home_points = float(game['homeScore'])
+    except (KeyError, TypeError, ValueError):
+        return None
 
-def create_user(player_code, player_name="Unnamed"):
-    try:
-        result = users.insert_one({
-            "playerCode": player_code,
-            "name": player_name,
-            "points": 0,
-            "picks": {}
-        })
-        return jsonify({"ok": True, "inserted_id": str(result.inserted_id)})
-    except DuplicateKeyError:
-        return jsonify({"ok": False, "error": "User already exists"}), 400
+    points_spread = game.get('gameSpread', 0)
+    if game.get('gameSpreadTeam') == game.get('homeTeam'):
+        home_points += points_spread
+    elif game.get('gameSpreadTeam') == game.get('awayTeam'):
+        away_points += points_spread
 
-@odds_bp.route('/api/odds/update-username', methods=['POST'])
-@require_mongo
-def update_username():
-    data = request.json
-    player_code = data["playerCode"]
-    username = data["username"]
+    if home_points > away_points:
+        return game['homeTeam']
+    if away_points > home_points:
+        return game['awayTeam']
+    return 'Push'
 
-    result = users.update_one(
-        {"playerCode": player_code},
-        {"$set": {"name": username}},
-        upsert=False
-    )
 
-    if result.matched_count == 0:
-        return jsonify({"status": "failed", "action": "no_user_found"})
+def _grade_ats_pick(game, pick_data):
+    """Did this pick cover the spread? True/False, or None until the game is
+    final. A push counts as a win for whichever team was picked."""
+    spread_coverer = _spread_coverer(game)
+    if spread_coverer is None:
+        return None
+    return spread_coverer == 'Push' or pick_data.get('selectedTeam') == spread_coverer
 
-    return jsonify({"status": "success", "action": "updated"})
 
-def get_user(player_code):
-    print(f"Looking up user {player_code}")
-    user = users.find_one({"playerCode": player_code}, {"_id": 0})
-    if user:
-        return jsonify(user)
-    else:
-        create_user(player_code)
-        user = users.find_one({"playerCode": player_code}, {"_id": 0})
-        return jsonify(user)
+@odds_bp.route('/api/odds/leaderboard')
+def get_leaderboard():
+    db = get_db()
+    current_uid = session.get('odds_user_id')
 
-def get_pick(game_id, player_code):
-    user = users.find_one({"playerCode": player_code})
-    if user:
+    games_by_id = {doc.id: doc.to_dict() for doc in db.collection('odds_games').stream()}
+
+    entries = []
+    for user_doc in db.collection('odds_users').stream():
+        user = user_doc.to_dict()
+        if user.get('isPrivate'):
+            continue
+
+        wins = 0
+        losses = 0
         for pick_id, pick_data in user.get('picks', {}).items():
-            if pick_id == game_id:
-                return pick_data
+            game = games_by_id.get(pick_id)
+            if not game:
+                continue
+            result = _grade_ats_pick(game, pick_data)
+            if result is None:
+                continue
+            if result:
+                wins += 1
+            else:
+                losses += 1
 
-@odds_bp.route('/api/odds/update-pick', methods=['POST'])
-@require_mongo
-def update_pick():
-    data = request.json
-    player_code = data["playerCode"]
-    game_id = data["gameId"]
+        if wins + losses == 0:
+            continue
 
-    new_pick = {
-        "homeTeam": data.get("homeTeam"),
-        "awayTeam": data.get("awayTeam"),
-        "selectedTeam": data.get("selectedTeam"),
-        "gameSpread": data.get("gameSpread")
+        entries.append({
+            "uid": user_doc.id,
+            "displayName": user.get('displayName') or 'Unnamed',
+            "wins": wins,
+            "losses": losses,
+        })
+
+    # ranked purely on total correct picks — no win-percentage weighting
+    entries.sort(key=lambda e: (-e['wins'], e['losses']))
+    for i, entry in enumerate(entries):
+        entry['rank'] = i + 1
+        entry['isYou'] = entry['uid'] == current_uid
+        del entry['uid']
+
+    return jsonify({"entries": entries})
+
+
+def _grade_week_record(user, games_by_id):
+    """(wins, losses) for every graded pick this user made against the given
+    week's games — shared by the recap's "your record" and "best record"
+    sections so they can't drift out of sync with each other."""
+    wins = 0
+    losses = 0
+    for pick_id, pick_data in (user.get('picks') or {}).items():
+        game = games_by_id.get(pick_id)
+        if not game:
+            continue
+        result = _grade_ats_pick(game, pick_data)
+        if result is None:
+            continue
+        if result:
+            wins += 1
+        else:
+            losses += 1
+    return wins, losses
+
+
+@odds_bp.route('/api/odds/recap')
+def get_weekly_recap():
+    """A look back at the week that just ended, shown once per user right
+    after the weekly reset: who had the best record last week (not
+    cumulative), the biggest ATS upset, and who's still undefeated in the
+    survivor pool. {"available": False} if there's no previous week yet
+    (week 1) or it has no graded games (nothing to recap)."""
+    current_week = _current_week_number()
+    if current_week is None:
+        return jsonify({"available": False})
+
+    last_week = current_week - 1
+    bounds = _week_bounds(last_week) if last_week >= 1 else None
+    if not bounds:
+        return jsonify({"available": False})
+    start, end = bounds
+
+    db = get_db()
+    last_week_games_by_id = {
+        doc.id: doc.to_dict()
+        for doc in db.collection('odds_games').where('gameTime', '>=', start).where('gameTime', '<=', end).stream()
     }
+    if not last_week_games_by_id:
+        return jsonify({"available": False})
 
-    previous_entry = users.find_one(
-        {"playerCode": player_code},
-        {f"picks.{game_id}": 1}
-    )
+    users_by_id = {doc.id: doc.to_dict() for doc in db.collection('odds_users').stream()}
 
-    old_pick = None
-    if previous_entry and "picks" in previous_entry and game_id in previous_entry["picks"]:
-        old_pick = previous_entry["picks"][game_id]
-    print(old_pick)
-    game_result = games.find_one({"gameId": game_id})
-    print(game_result)
-    if old_pick:
-        old_team = old_pick.get("selectedTeam")
-        new_team = new_pick.get("selectedTeam")
+    # the viewer's own record — independent of the isPrivate filter below,
+    # since hiding from the leaderboard shouldn't hide your own stats from you
+    your_record = None
+    current_uid = session.get('odds_user_id')
+    if current_uid and current_uid in users_by_id:
+        viewer = users_by_id[current_uid]
+        wins, losses = _grade_week_record(viewer, last_week_games_by_id)
+        if wins + losses > 0:
+            your_record = {"name": viewer.get('displayName') or 'Unnamed', "wins": wins, "losses": losses}
 
-        if old_team != new_team:
-            if old_team == new_pick["homeTeam"]:
-                games.update_one(
-                    {"gameId": game_id, "homePickCount": {"$gt": 0}},
-                    {"$inc": {"homePickCount": -1}}
-                )
-            elif old_team == new_pick["awayTeam"]:
-                games.update_one(
-                    {"gameId": game_id, "awayPickCount": {"$gt": 0}},
-                    {"$inc": {"awayPickCount": -1}}
-                )
+    # best record last week — ranked by wins only, same philosophy as the main
+    # leaderboard (no percentage weighting); losses are carried along just for
+    # display, since "record" reads oddly as a bare win count
+    best_wins = -1
+    best_entries = []
+    for user in users_by_id.values():
+        if user.get('isPrivate'):
+            continue
+        wins, losses = _grade_week_record(user, last_week_games_by_id)
+        if wins + losses == 0:
+            continue
+        entry = {"name": user.get('displayName') or 'Unnamed', "wins": wins, "losses": losses}
+        if wins > best_wins:
+            best_wins = wins
+            best_entries = [entry]
+        elif wins == best_wins:
+            best_entries.append(entry)
 
-            if new_team == new_pick["homeTeam"]:
-                games.update_one({"gameId": game_id}, {"$inc": {"homePickCount": 1}})
-            elif new_team == new_pick["awayTeam"]:
-                games.update_one({"gameId": game_id}, {"$inc": {"awayPickCount": 1}})
-    else:
-        if new_pick["selectedTeam"] == new_pick["homeTeam"]:
-            games.update_one({"gameId": game_id}, {"$inc": {"homePickCount": 1}})
-        elif new_pick["selectedTeam"] == new_pick["awayTeam"]:
-            games.update_one({"gameId": game_id}, {"$inc": {"awayPickCount": 1}})
+    # biggest upset — fewest people correct among games that were actually picked
+    # and actually resolved to a side (a push means everyone "wins", so it can
+    # never be the upset)
+    upset = None
+    upset_game_id = None
+    for game in last_week_games_by_id.values():
+        coverer = _spread_coverer(game)
+        if coverer is None or coverer == 'Push':
+            continue
+        home_picks = game.get('homePickCount', 0)
+        away_picks = game.get('awayPickCount', 0)
+        total_picks = home_picks + away_picks
+        if total_picks == 0:
+            continue
+        correct_count = home_picks if coverer == game['homeTeam'] else away_picks
+        if upset is None or correct_count < upset['correctCount']:
+            upset = {
+                "awayTeam": game['awayTeam'],
+                "homeTeam": game['homeTeam'],
+                "correctTeam": coverer,
+                "correctCount": correct_count,
+                "totalCount": total_picks,
+            }
+            upset_game_id = game['gameId']
 
-    result = users.update_one(
-        {"playerCode": player_code},
-        {"$set": {f"picks.{game_id}": new_pick}}
-    )
+    if upset is not None:
+        upset['correctNames'] = sorted(
+            user.get('displayName') or 'Unnamed'
+            for user in users_by_id.values()
+            if not user.get('isPrivate')
+            and (user.get('picks') or {}).get(upset_game_id, {}).get('selectedTeam') == upset['correctTeam']
+        )
+
+    # still undefeated in survivor, as of right now (not frozen to last week)
+    all_survivors = [u.get('survivor') or {} for u in users_by_id.values() if (u.get('survivor') or {}).get('picks')]
+    survivor_games_by_id = _games_by_id_for_survivors(db, all_survivors)
+    still_alive = _still_undefeated_users(survivor_games_by_id, users_by_id, current_week)
+    survivor_names = [u.get('displayName') or 'Unnamed' for u in still_alive]
 
     return jsonify({
-        "status": "success",
-        "action": "updated" if result.matched_count else "created"
+        "available": True,
+        "week": last_week,
+        "yourRecord": your_record,
+        "bestRecord": {"entries": best_entries} if best_entries else None,
+        "upset": upset,
+        "survivorAlive": {"names": survivor_names, "count": len(survivor_names)},
     })
 
-@odds_bp.route('/api/odds/player/<player_code>')
-@require_mongo
-def get_user_data(player_code):
-    return get_user(player_code)
 
-@odds_bp.route('/api/odds/stats/<player_code>')
-@require_mongo
-def get_user_stats(player_code):
-    print(player_code)
-    return get_stats(player_code)
+@odds_bp.route('/api/odds/game-pickers/<game_id>')
+def get_game_pickers(game_id):
+    db = get_db()
+    game_doc = db.collection('odds_games').document(game_id).get()
+    if not game_doc.exists:
+        return jsonify({"error": "Game not found"}), 404
+    game = game_doc.to_dict()
+    current_uid = session.get('odds_user_id')
 
-def get_stats(player_code):
-    user = users.find_one({"playerCode": player_code})
-    user_points = 0
+    home_team = game.get('homeTeam')
+    away_team = game.get('awayTeam')
+    home_pickers = []
+    away_pickers = []
+
+    for user_doc in db.collection('odds_users').stream():
+        user = user_doc.to_dict()
+        if user.get('isPrivate'):
+            continue
+        pick = user.get('picks', {}).get(game_id)
+        if not pick:
+            continue
+        entry = {
+            "displayName": user.get('displayName') or 'Unnamed',
+            "isYou": user_doc.id == current_uid,
+        }
+        if pick.get('selectedTeam') == home_team:
+            home_pickers.append(entry)
+        elif pick.get('selectedTeam') == away_team:
+            away_pickers.append(entry)
+
+    home_pickers.sort(key=lambda e: e['displayName'].lower())
+    away_pickers.sort(key=lambda e: e['displayName'].lower())
+
+    return jsonify({
+        "homeTeam": home_team,
+        "awayTeam": away_team,
+        "homeCount": game.get('homePickCount', 0),
+        "awayCount": game.get('awayPickCount', 0),
+        "homePickers": home_pickers,
+        "awayPickers": away_pickers,
+    })
+
+
+@odds_bp.route('/api/odds/player/me')
+@require_auth
+def get_user_data():
+    doc = get_db().collection('odds_users').document(g.uid).get()
+    if not doc.exists:
+        # shouldn't happen — the OAuth callback creates this doc before the session is set
+        return jsonify({"error": "not found"}), 404
+    data = doc.to_dict()
+    data["hasPushSubscription"] = bool(data.pop("pushSubscription", None))
+    return jsonify(data)
+
+
+@odds_bp.route('/api/odds/update-profile', methods=['POST'])
+@require_auth
+def update_profile():
+    data = request.json
+    username = (data.get("username") or "").strip()
+    is_private = data.get("isPrivate")
+
+    doc_ref = get_db().collection('odds_users').document(g.uid)
+    if not doc_ref.get().exists:
+        return jsonify({"status": "failed", "action": "no_user_found"})
+
+    updates = {"displayName": username, "isPrivate": bool(is_private)}
+    doc_ref.update(updates)
+    return jsonify({"status": "success", "action": "updated"})
+
+
+def _adjust_pick_count(db, game_id, home_delta, away_delta):
+    game_ref = db.collection('odds_games').document(game_id)
+    game = game_ref.get()
+    if not game.exists:
+        return
+    data = game.to_dict()
+    updates = {}
+    if home_delta:
+        updates['homePickCount'] = max(0, data.get('homePickCount', 0) + home_delta)
+    if away_delta:
+        updates['awayPickCount'] = max(0, data.get('awayPickCount', 0) + away_delta)
+    if updates:
+        game_ref.update(updates)
+        cached = _week_cache['games'].get(game_id)
+        if cached is not None:
+            cached.update(updates)
+
+
+def _lookup_game(db, game_id):
+    """The game doc: from the week cache when it's a current-week game (no read), else straight from Firestore."""
+    game = _current_week_games(db).get(game_id)
+    if game is not None:
+        return game
+    snap = db.collection('odds_games').document(game_id).get()
+    return snap.to_dict() if snap.exists else None
+
+
+@odds_bp.route('/api/odds/update-pick', methods=['POST'])
+@require_auth
+def update_pick():
+    """Set, switch or clear (selectedTeam null) the caller's pick for one game."""
+    data = request.json
+    game_id = data["gameId"]
+    selected_team = data.get("selectedTeam")
+
+    db = get_db()
+    game = _lookup_game(db, game_id)
+    if game is None:
+        return jsonify({"error": "Game not found"}), 404
+    if _game_view(game)['state'] != 'open':
+        return jsonify({"error": "This game has already started"}), 409
+
+    home_team, away_team = game.get('homeTeam'), game.get('awayTeam')
+    if selected_team is not None and selected_team not in (home_team, away_team):
+        return jsonify({"error": "selectedTeam does not match either team in this game"}), 400
+
+    user_ref = db.collection('odds_users').document(g.uid)
+    user_doc = user_ref.get()
+    old_pick = user_doc.to_dict().get('picks', {}).get(game_id) if user_doc.exists else None
+    old_team = old_pick.get("selectedTeam") if old_pick else None
+
+    home_delta = 0
+    away_delta = 0
+    if old_team != selected_team:
+        for team, sign in ((old_team, -1), (selected_team, 1)):
+            if team == home_team:
+                home_delta += sign
+            elif team == away_team:
+                away_delta += sign
+    if home_delta or away_delta:
+        _adjust_pick_count(db, game_id, home_delta, away_delta)
+
+    if selected_team is None:
+        if old_pick:
+            user_ref.update({f"picks.{game_id}": firestore.DELETE_FIELD})
+    else:
+        user_ref.update({f"picks.{game_id}": {
+            "homeTeam": data.get("homeTeam"),
+            "awayTeam": data.get("awayTeam"),
+            "selectedTeam": selected_team,
+            "gameSpread": data.get("gameSpread")
+        }})
+
+    return jsonify({"status": "success"})
+
+
+@odds_bp.route('/api/odds/stats/me')
+@require_auth
+def get_user_stats():
+    return get_stats(g.uid)
+
+
+def get_stats(uid):
+    db = get_db()
+    user_doc = db.collection('odds_users').document(uid).get()
+    if not user_doc.exists:
+        return jsonify({"status": "failed"})
+    user = user_doc.to_dict()
+
     total_picks = 0
+    user_points = 0
     selected_teams = []
     underdog_teams = []
     underdog_winners = 0
@@ -286,30 +437,18 @@ def get_stats(player_code):
     best_team_win_count = 0
     worst_team = ''
     worst_team_loss_count = 0
-    for pick_id, pick_data in user.get('picks', {}).items():
-        game = games.find_one({"gameId": pick_id})
-        try:
-            game_time_utc = game['gameTime'].replace(tzinfo=timezone.utc)
-            now_utc = datetime.now(timezone.utc)
-            if game_time_utc > now_utc:
-                continue
 
-            away_points = float(game['awayScore'])
-            home_points = float(game['homeScore'])
-            points_spread = game['gameSpread']
-            if game['gameSpreadTeam'] == game['homeTeam']:
-                home_points += points_spread
-            elif game['gameSpreadTeam'] == game['awayTeam']:
-                away_points += points_spread
-            spread_coverer = 'Push'
-            if home_points > away_points:
-                spread_coverer = game['homeTeam']
-            elif away_points > home_points:
-                spread_coverer = game['awayTeam']
-            is_winner = False
-            if pick_data.get('selectedTeam') == spread_coverer:
+    for pick_id, pick_data in user.get('picks', {}).items():
+        game_doc = db.collection('odds_games').document(pick_id).get()
+        if not game_doc.exists:
+            continue
+        game = game_doc.to_dict()
+        try:
+            is_winner = _grade_ats_pick(game, pick_data)
+            if is_winner is None:
+                continue
+            if is_winner:
                 user_points += 1
-                is_winner = True
 
             is_favorite = True
             if '+' in str(pick_data.get('gameSpread')):
@@ -328,8 +467,7 @@ def get_stats(player_code):
             total_picks += 1
         except Exception:
             pass
-    print(f"User's points:{user_points}")
-    print(f"Total picks:{total_picks}")
+
     if total_picks > 0:
         for underdog in underdog_teams:
             if underdog['is_winner']:
@@ -349,16 +487,19 @@ def get_stats(player_code):
                 losing_team_names.append(team['selected_team'])
         favorite_team_counts = Counter(selected_team_names)
         most_frequent_selected_team_tuple = favorite_team_counts.most_common(1)
-        favorite_team = most_frequent_selected_team_tuple[0][0]
-        favorite_team_times_picked = most_frequent_selected_team_tuple[0][1]
+        if most_frequent_selected_team_tuple:
+            favorite_team = most_frequent_selected_team_tuple[0][0]
+            favorite_team_times_picked = most_frequent_selected_team_tuple[0][1]
         best_team_counts = Counter(winning_team_names)
         best_team_tuple = best_team_counts.most_common(1)
-        best_team = best_team_tuple[0][0]
-        best_team_win_count = best_team_tuple[0][1]
+        if best_team_tuple:
+            best_team = best_team_tuple[0][0]
+            best_team_win_count = best_team_tuple[0][1]
         worst_team_counts = Counter(losing_team_names)
         worst_team_tuple = worst_team_counts.most_common(1)
-        worst_team = worst_team_tuple[0][0]
-        worst_team_loss_count = worst_team_tuple[0][1]
+        if worst_team_tuple:
+            worst_team = worst_team_tuple[0][0]
+            worst_team_loss_count = worst_team_tuple[0][1]
 
         return jsonify({
             "status": "success",

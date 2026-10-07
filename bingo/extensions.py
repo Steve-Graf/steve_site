@@ -8,8 +8,9 @@ _fs_client = None
 
 def init_firebase(cred_path: str):
     global _fs_client
-    cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred)
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(cred_path)
+        firebase_admin.initialize_app(cred)
     _fs_client = firestore.client()
 
 
